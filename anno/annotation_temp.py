@@ -22,7 +22,7 @@ desired_change_name = []
 desired_change_point = []
 
 
-def mouse_click(event, x, y, flags):
+def mouse_click(event, x, y, flags, param):
     global frame_list, frame_list_classes, display_frame, drawing, ix, iy,\
         desired_deletes, desired_change_name, zoom_level, zoom_step
 
@@ -253,7 +253,7 @@ def annotation_from_local_video(
             print("Annotation Mode opened, video paused!")
             cv2.setMouseCallback('window', mouse_click)
             key = cv2.waitKey(0) & 0xFF
-
+            cv2.setMouseCallback('window', mouse_click)
             # Setting zoom level and step size to their original values
             zoom_level = 1
             zoom_step = 0.1
