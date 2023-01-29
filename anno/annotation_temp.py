@@ -249,18 +249,10 @@ def annotation_from_local_video(
         if key & 0xFF == ord("q"):
             break
 
-        # =============================================================================
-        #       When "a" is pressed for the first time, it does not return x and y
-        #       Therefore, press any key except "a" for the first time
-        #       For example press "a" then "b" directly after starting the code
-        # =============================================================================
-
         if key & 0xFF == ord("a"):
             print("Annotation Mode opened, video paused!")
-            key = cv2.waitKey(0) & 0xFF
-
-            # Get Mouse Event
             cv2.setMouseCallback('window', mouse_click)
+            key = cv2.waitKey(0) & 0xFF
 
             # Setting zoom level and step size to their original values
             zoom_level = 1
