@@ -13,7 +13,7 @@ filter_classes = None
 
 # tracking function
 track_fn = dt_obj.track_video(
-    'data/test_vid.mp4', output_dir=config["output_dir"],
+    'videos/test_vid.mp4', output_dir=config["output_dir"],
     save_result=True, display=True,
     filter_classes=filter_classes)
 

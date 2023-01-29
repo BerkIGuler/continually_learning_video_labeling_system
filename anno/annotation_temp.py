@@ -217,7 +217,7 @@ def change_class_name(frame_num, labels_path):
 
 def annotation_from_local_video(
         video_path, fps, x_size, y_size,
-        labels_path, annotated_frames_path):
+        frames_path, labels_path, annotated_frames_path):
     global frame_list, display_frame, desired_deletes, desired_change_name, zoom_level, zoom_step
     # Zoom level and step size for each scroll
     zoom_level = 1
