@@ -5,6 +5,7 @@
 - Ensure raw frame names are unique, format:vidname_framenum.jpg 
 - Ensure label names are unique, format:vidname_framenum.txt
 - label txt files are in normalized yolo form
+- id to label name mapping
 ```
 Each text file must fulfill all the properties of the YOLO format text file which are the following:
 1. The first element of each row is a class id, then bounding box properties (x, y, width, height). 
