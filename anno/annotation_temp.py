@@ -1,3 +1,4 @@
+import copy
 import os
 import cv2
 
@@ -21,21 +22,30 @@ desired_deletes = []
 desired_change_name = []
 desired_change_point = []
 
+pressed = False
+cache = None
 
 def mouse_click(event, x, y, flags, param):
     global frame_list, frame_list_classes, display_frame, drawing, ix, iy,\
-        desired_deletes, desired_change_name, zoom_level, zoom_step
+        desired_deletes, desired_change_name, zoom_level, zoom_step, pressed, cache
 
     # Check if you started to hold left click
     if event == cv2.EVENT_LBUTTONDOWN:
         print("Left start: ", x, y)
         frame_list.append((x, y))
         ix, iy = x, y
+        pressed = True
+        cache = copy.deepcopy(display_frame)
 
+    if event == cv2.EVENT_MOUSEMOVE and pressed:
+        cv2.rectangle(cache, (ix, iy), (x, y), (0, 0, 255), 2)
+        cv2.imshow("window", cache)
+        cache = copy.deepcopy(display_frame)
     # Check if you finished holding left click
     if event == cv2.EVENT_LBUTTONUP:
         print("Left release: ", x, y)
         frame_list.append((x, y))
+        pressed = False
 
         # Get the class with keyboard
         key = cv2.waitKey(0)
@@ -273,12 +283,6 @@ def annotation_from_local_video(
             if len(desired_change_name) > 0:
                 print("Changing class names of desired labels")
                 change_class_name(frame_num, labels_path)
-
-        if key & 0xFF == ord("b"):
-            print("Annotation Mode opened, video paused!")
-            cv2.imshow("window", display_frame)
-            # Get Mouse Event
-            cv2.setMouseCallback('window', mouse_click)
 
         frame_num += 1
 
