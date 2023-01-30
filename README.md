@@ -5,6 +5,4 @@
 - Create a branch that fixes/implements the desired change
 - Send a pull request with adding group members as reviews
 
-Note: Please do not merge anything to master directly. Also do not push to master directly.
-
-
+*Note*: Please do not merge anything to master directly. Also do not push to master directly.
