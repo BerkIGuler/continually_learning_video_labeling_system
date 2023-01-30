@@ -1,4 +1,3 @@
-# last_dance
 ## Dear Team Members:
 1. Please check issues section 
 2. Find the issue you want to handle
