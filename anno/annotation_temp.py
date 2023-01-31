@@ -2,6 +2,9 @@ import copy
 import os
 import cv2
 
+# class Dictionary
+classDict = {"1": "Car", "7": "Person", "24": "Apartment", "31": "Cloud", "32": "Forest"}
+
 zoom_level = 0.1
 zoom_step = 0.1
 center = None
@@ -27,7 +30,7 @@ cache = None
 
 def mouse_click(event, x, y, flags, param):
     global frame_list, frame_list_classes, display_frame, drawing, ix, iy,\
-        desired_deletes, desired_change_name, zoom_level, zoom_step, pressed, cache
+        desired_deletes, desired_change_name, zoom_level, zoom_step, pressed, cache, classDict
 
     # Check if you started to hold left click
     if event == cv2.EVENT_LBUTTONDOWN:
@@ -49,14 +52,20 @@ def mouse_click(event, x, y, flags, param):
         # Get the class with keyboard
         key = cv2.waitKey(0)
         if key == ord("1"):
-            frame_list_classes.append("Person")
+            frame_list_classes.append("7") # Person
         elif key == ord("2"):
-            frame_list_classes.append("Car")
+            frame_list_classes.append("1") # Car
+        elif key == ord("3"):
+            frame_list_classes.append("24") # Apartment
+        elif key == ord("4"):
+            frame_list_classes.append("32") # Forest
+        elif key == ord("5"):
+            frame_list_classes.append("31")  # Cloud
 
         # Draw bounding box
         cv2.rectangle(display_frame, (ix, iy), (x, y), (0, 0, 255), 2)
         cv2.putText(
-            display_frame, frame_list_classes[-1], (ix, iy - 5),
+            display_frame, classDict[frame_list_classes[-1]], (ix, iy - 5),
             cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1,
             cv2.LINE_4)
 
@@ -75,9 +84,16 @@ def mouse_click(event, x, y, flags, param):
         # Get desired class name
         key = cv2.waitKey(0)
         if key == ord("1"):
-            desired_change_name.append("Person")
+            frame_list_classes.append("7") # Person
         elif key == ord("2"):
-            desired_change_name.append("Car")
+            frame_list_classes.append("1") # Car
+        elif key == ord("3"):
+            frame_list_classes.append("24") # Apartment
+        elif key == ord("4"):
+            frame_list_classes.append("32") # Forest
+        elif key == ord("5"):
+            frame_list_classes.append("31")  # Cloud
+
     if event == cv2.EVENT_MOUSEWHEEL:
         print("Mouse wheel touched")
         # If the mouse scroll is moved up, zoom in
@@ -109,7 +125,8 @@ def mouse_click(event, x, y, flags, param):
             cv2.imshow("window", display_frame)
 
 
-def update_labels(vid_name, frame_num, labels_path):
+
+def update_labels(vid_name, frame_num, labels_path, x_size, y_size):
     global frame_list, frame_list_classes
 
     # If there is already labeled info, append
@@ -117,11 +134,15 @@ def update_labels(vid_name, frame_num, labels_path):
         file = open("{}/{}_{}.txt".format(labels_path, vid_name, frame_num), "a")
         cnt = 0
         for i in range(0, len(frame_list)):
-            file.write(frame_list_classes[cnt] + "\t")
-            file.write(str(frame_list[i][0]) + "\t")
-            file.write(str(frame_list[i][1]) + "\t")
-            file.write(str(frame_list[i][2]) + "\t")
-            file.write(str(frame_list[i][3]) + "\n")
+            centerPointx = (frame_list[i][0] + frame_list[i][2]) / 2 / x_size
+            centerPointy = (frame_list[i][1] + frame_list[i][3]) / 2 / y_size
+            width = abs(frame_list[i][0] - frame_list[i][2]) / x_size
+            height = abs(frame_list[i][1] - frame_list[i][3]) / y_size
+            file.write(frame_list_classes[cnt] + " ")
+            file.write("{:.6f}".format(centerPointx) + " ")
+            file.write("{:.6f}".format(centerPointy) + " ")
+            file.write("{:.6f}".format(width) + " ")
+            file.write("{:.6f}".format(height) + "\n")
             cnt += 1
 
     # If there is not any label yet, create and write
@@ -129,11 +150,15 @@ def update_labels(vid_name, frame_num, labels_path):
         file = open("{}/{}_{}.txt".format(labels_path, vid_name, frame_num), "w")
         cnt = 0
         for i in range(0, len(frame_list)):
-            file.write(frame_list_classes[cnt] + "\t")
-            file.write(str(frame_list[i][0]) + "\t")
-            file.write(str(frame_list[i][1]) + "\t")
-            file.write(str(frame_list[i][2]) + "\t")
-            file.write(str(frame_list[i][3]) + "\n")
+            centerPointx = (frame_list[i][0] + frame_list[i][2]) / 2 / x_size
+            centerPointy = (frame_list[i][1] + frame_list[i][3]) / 2 / y_size
+            width = abs(frame_list[i][0] - frame_list[i][2]) / x_size
+            height = abs(frame_list[i][1] - frame_list[i][3]) / y_size
+            file.write(frame_list_classes[cnt] + " ")
+            file.write("{:.6f}".format(centerPointx) + " ")
+            file.write("{:.6f}".format(centerPointy) + " ")
+            file.write("{:.6f}".format(width) + " ")
+            file.write("{:.6f}".format(height) + "\n")
             cnt += 1
 
     # Make frame_list ready for next annotations
@@ -273,7 +298,7 @@ def annotation_from_local_video(
                 print("Saving annotated frames")
                 save_annotated_frames(video_name, display_frame, frame_num, annotated_frames_path)
                 print("Saving labels of annotated frames")
-                update_labels(video_name, frame_num, labels_path)
+                update_labels(video_name, frame_num, labels_path, x_size, y_size)
 
             # If right is clicked and it is desired to delete some labels
             if len(desired_deletes) > 0:
