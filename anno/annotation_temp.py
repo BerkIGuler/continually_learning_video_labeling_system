@@ -65,7 +65,7 @@ def mouse_click(event, x, y, flags, param):
         # Draw bounding box
         cv2.rectangle(display_frame, (ix, iy), (x, y), (0, 0, 255), 2)
         cv2.putText(
-            display_frame, classDict[frame_list_classes[-1]], (ix, iy - 5),
+            display_frame, classDict[frame_list_classes[-1]], (min(x, ix), min(y, iy) - 5),
             cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1,
             cv2.LINE_4)
 
