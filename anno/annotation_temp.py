@@ -109,12 +109,12 @@ def mouse_click(event, x, y, flags, param):
             cv2.imshow("window", display_frame)
 
 
-def update_labels(frame_num, labels_path):
+def update_labels(vid_name, frame_num, labels_path):
     global frame_list, frame_list_classes
 
     # If there is already labeled info, append
-    if os.path.exists("{}/{}.txt".format(labels_path, frame_num)):
-        file = open("{}/{}.txt".format(labels_path, frame_num), "a")
+    if os.path.exists("{}/{}_{}.txt".format(labels_path, vid_name, frame_num)):
+        file = open("{}/{}_{}.txt".format(labels_path, vid_name, frame_num), "a")
         cnt = 0
         for i in range(0, len(frame_list)):
             file.write(frame_list_classes[cnt] + "\t")
@@ -126,7 +126,7 @@ def update_labels(frame_num, labels_path):
 
     # If there is not any label yet, create and write
     else:
-        file = open("{}/{}.txt".format(labels_path, frame_num), "w")
+        file = open("{}/{}_{}.txt".format(labels_path, vid_name, frame_num), "w")
         cnt = 0
         for i in range(0, len(frame_list)):
             file.write(frame_list_classes[cnt] + "\t")
@@ -141,18 +141,18 @@ def update_labels(frame_num, labels_path):
     frame_list_classes = []
 
 
-def save_annotated_frames(anno_frame, frame_num, anno_frames_path):
-    cv2.imwrite("{}/{}.jpg".format(anno_frames_path, frame_num), anno_frame)
+def save_annotated_frames(vid_name, anno_frame, frame_num, anno_frames_path):
+    cv2.imwrite("{}/{}_{}.jpg".format(anno_frames_path, vid_name, frame_num), anno_frame)
 
 
-def delete_labels(frame_num, labels_path):
+def delete_labels(vid_name, frame_num, labels_path):
     global desired_deletes
 
     lines_list = []
     removal_list = []
 
     # Open file to read
-    f1 = open("{}/{}.txt".format(labels_path, frame_num), "r")
+    f1 = open("{}/{}_{}.txt".format(labels_path, vid_name, frame_num), "r")
 
     # Get lines
     for line in f1:
@@ -171,7 +171,7 @@ def delete_labels(frame_num, labels_path):
         cnt += 1
 
     # Open file to write
-    f2 = open("{}/{}.txt".format(labels_path, frame_num), "w")
+    f2 = open("{}/{}_{}.txt".format(labels_path, vid_name, frame_num), "w")
 
     for i in range(len(lines_list)):
         if i not in removal_list:
@@ -181,14 +181,14 @@ def delete_labels(frame_num, labels_path):
     desired_deletes = []
 
 
-def change_class_name(frame_num, labels_path):
+def change_class_name(vid_name, frame_num, labels_path):
     global desired_change_name, desired_change_point
 
     lines_list = []
     changed_line_list = []
 
     # Open file
-    f1 = open("{}/{}.txt".format(labels_path, frame_num), "r")
+    f1 = open("{}/{}_{}.txt".format(labels_path, vid_name, frame_num), "r")
 
     # Get lines
     for line in f1:
@@ -214,7 +214,7 @@ def change_class_name(frame_num, labels_path):
         cnt += 1
 
     # Open file to write
-    f2 = open("{}/{}.txt".format(labels_path, frame_num), "w")
+    f2 = open("{}/{}_{}.txt".format(labels_path, vid_name, frame_num), "w")
 
     for line in changed_line_list:
         f2.write(line)
@@ -234,6 +234,7 @@ def annotation_from_local_video(
 
     # Capture Video
     captured = cv2.VideoCapture(video_path)
+    video_name = os.path.basename(video_path).split(".")[0]
 
     frame_num = 0
     while True:
@@ -270,18 +271,18 @@ def annotation_from_local_video(
             # Update Labels if you get any x and y values
             if len(frame_list) != 0:
                 print("Saving annotated frames")
-                save_annotated_frames(display_frame, frame_num, annotated_frames_path)
+                save_annotated_frames(video_name, display_frame, frame_num, annotated_frames_path)
                 print("Saving labels of annotated frames")
-                update_labels(frame_num, labels_path)
+                update_labels(video_name, frame_num, labels_path)
 
             # If right is clicked and it is desired to delete some labels
             if len(desired_deletes) > 0:
                 print("Deleting desired labels")
-                delete_labels(frame_num, labels_path)
+                delete_labels(video_name, frame_num, labels_path)
 
             if len(desired_change_name) > 0:
                 print("Changing class names of desired labels")
-                change_class_name(frame_num, labels_path)
+                change_class_name(video_name, frame_num, labels_path)
 
         frame_num += 1
 
