@@ -52,13 +52,13 @@ def mouse_click(event, x, y, flags, param):
         # Get the class with keyboard
         key = cv2.waitKey(0)
         if key == ord("1"):
-            frame_list_classes.append("7") # Person
+            frame_list_classes.append("7")  # Person
         elif key == ord("2"):
-            frame_list_classes.append("1") # Car
+            frame_list_classes.append("1")  # Car
         elif key == ord("3"):
-            frame_list_classes.append("24") # Apartment
+            frame_list_classes.append("24")  # Apartment
         elif key == ord("4"):
-            frame_list_classes.append("32") # Forest
+            frame_list_classes.append("32")  # Forest
         elif key == ord("5"):
             frame_list_classes.append("31")  # Cloud
 
