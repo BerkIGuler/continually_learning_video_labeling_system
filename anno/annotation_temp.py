@@ -32,7 +32,6 @@ def mouse_click(event, x, y, flags, param):
     # Check if you started to hold left click
     if event == cv2.EVENT_LBUTTONDOWN:
         print("Left start: ", x, y)
-        frame_list.append((x, y))
         ix, iy = x, y
         pressed = True
         cache = copy.deepcopy(display_frame)
@@ -44,7 +43,7 @@ def mouse_click(event, x, y, flags, param):
     # Check if you finished holding left click
     if event == cv2.EVENT_LBUTTONUP:
         print("Left release: ", x, y)
-        frame_list.append((x, y))
+        frame_list.append([ix, iy, x, y])
         pressed = False
 
         # Get the class with keyboard
@@ -117,24 +116,24 @@ def update_labels(frame_num, labels_path):
     if os.path.exists("{}/{}.txt".format(labels_path, frame_num)):
         file = open("{}/{}.txt".format(labels_path, frame_num), "a")
         cnt = 0
-        for i in range(0, len(frame_list), 2):
+        for i in range(0, len(frame_list)):
             file.write(frame_list_classes[cnt] + "\t")
             file.write(str(frame_list[i][0]) + "\t")
             file.write(str(frame_list[i][1]) + "\t")
-            file.write(str(frame_list[i + 1][0]) + "\t")
-            file.write(str(frame_list[i + 1][1]) + "\n")
+            file.write(str(frame_list[i][2]) + "\t")
+            file.write(str(frame_list[i][3]) + "\n")
             cnt += 1
 
     # If there is not any label yet, create and write
     else:
         file = open("{}/{}.txt".format(labels_path, frame_num), "w")
         cnt = 0
-        for i in range(0, len(frame_list), 2):
+        for i in range(0, len(frame_list)):
             file.write(frame_list_classes[cnt] + "\t")
             file.write(str(frame_list[i][0]) + "\t")
             file.write(str(frame_list[i][1]) + "\t")
-            file.write(str(frame_list[i + 1][0]) + "\t")
-            file.write(str(frame_list[i + 1][1]) + "\n")
+            file.write(str(frame_list[i][2]) + "\t")
+            file.write(str(frame_list[i][3]) + "\n")
             cnt += 1
 
     # Make frame_list ready for next annotations
