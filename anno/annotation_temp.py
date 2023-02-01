@@ -1,20 +1,32 @@
 import copy
 import os
 import cv2
+import asone
+from asone import ASOne
+import yaml
 
-# class Dictionary
-classDict = {"1": "Car", "7": "Person", "24": "Apartment", "31": "Cloud", "32": "Forest"}
+import helpers
 
-zoom_level = 0.1
+cwd = os.getcwd()
+config_dir = os.path.join(cwd, "config_files")
+colors_path = os.path.join(config_dir, "color_list.yaml")
+class_path = os.path.join(config_dir, "class_list.yaml")
+
+with open(colors_path, "r") as f_in:
+    colors = yaml.safe_load(f_in)
+
+with open(class_path, "r") as f_in:
+    classes = yaml.safe_load(f_in)
+
+zoom_level = 1
 zoom_step = 0.1
-center = None
 
 # To write x and y values & classes
-frame_list = []
-frame_list_classes = []
+bboxes = []
+class_ids = []
 
 # To show added labels frame
-display_frame = ""
+display_frame = None
 drawing = False
 ix, iy = 0, 0
 
@@ -28,13 +40,21 @@ desired_change_point = []
 pressed = False
 cache = None
 
+dt_obj = ASOne(
+    tracker=asone.DEEPSORT,
+    detector=asone.YOLOV7_PYTORCH,
+    use_cuda=True)
+
+# None to track all classes
+filter_classes = None
+
+
 def mouse_click(event, x, y, flags, param):
-    global frame_list, frame_list_classes, display_frame, drawing, ix, iy,\
+    global bboxes, class_ids, display_frame, drawing, ix, iy,\
         desired_deletes, desired_change_name, zoom_level, zoom_step, pressed, cache, classDict
 
     # Check if you started to hold left click
     if event == cv2.EVENT_LBUTTONDOWN:
-        print("Left start: ", x, y)
         ix, iy = x, y
         pressed = True
         cache = copy.deepcopy(display_frame)
@@ -45,27 +65,26 @@ def mouse_click(event, x, y, flags, param):
         cache = copy.deepcopy(display_frame)
     # Check if you finished holding left click
     if event == cv2.EVENT_LBUTTONUP:
-        print("Left release: ", x, y)
-        frame_list.append([ix, iy, x, y])
+        bboxes.append([ix, iy, x, y])
         pressed = False
 
         # Get the class with keyboard
         key = cv2.waitKey(0)
         if key == ord("1"):
-            frame_list_classes.append("7")  # Person
+            class_ids.append(7)  # Person
         elif key == ord("2"):
-            frame_list_classes.append("1")  # Car
+            class_ids.append(1)  # Car
         elif key == ord("3"):
-            frame_list_classes.append("24")  # Apartment
+            class_ids.append(24)  # Apartment
         elif key == ord("4"):
-            frame_list_classes.append("32")  # Forest
+            class_ids.append(32)  # Forest
         elif key == ord("5"):
-            frame_list_classes.append("31")  # Cloud
+            class_ids.append(31)  # Cloud
 
         # Draw bounding box
         cv2.rectangle(display_frame, (ix, iy), (x, y), (0, 0, 255), 2)
         cv2.putText(
-            display_frame, classDict[frame_list_classes[-1]], (min(x, ix), min(y, iy) - 5),
+            display_frame, classes[class_ids[-1]], (min(x, ix), min(y, iy) - 5),
             cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1,
             cv2.LINE_4)
 
@@ -84,15 +103,15 @@ def mouse_click(event, x, y, flags, param):
         # Get desired class name
         key = cv2.waitKey(0)
         if key == ord("1"):
-            frame_list_classes.append("7") # Person
+            class_ids.append(7) # Person
         elif key == ord("2"):
-            frame_list_classes.append("1") # Car
+            class_ids.append(1) # Car
         elif key == ord("3"):
-            frame_list_classes.append("24") # Apartment
+            class_ids.append(24) # Apartment
         elif key == ord("4"):
-            frame_list_classes.append("32") # Forest
+            class_ids.append(32) # Forest
         elif key == ord("5"):
-            frame_list_classes.append("31")  # Cloud
+            class_ids.append(31)  # Cloud
 
     if event == cv2.EVENT_MOUSEWHEEL:
         print("Mouse wheel touched")
@@ -127,18 +146,18 @@ def mouse_click(event, x, y, flags, param):
 
 
 def update_labels(vid_name, frame_num, labels_path, x_size, y_size):
-    global frame_list, frame_list_classes
+    global bboxes, class_ids
 
     # If there is already labeled info, append
     if os.path.exists("{}/{}_{}.txt".format(labels_path, vid_name, frame_num)):
         file = open("{}/{}_{}.txt".format(labels_path, vid_name, frame_num), "a")
         cnt = 0
-        for i in range(0, len(frame_list)):
-            centerPointx = (frame_list[i][0] + frame_list[i][2]) / 2 / x_size
-            centerPointy = (frame_list[i][1] + frame_list[i][3]) / 2 / y_size
-            width = abs(frame_list[i][0] - frame_list[i][2]) / x_size
-            height = abs(frame_list[i][1] - frame_list[i][3]) / y_size
-            file.write(frame_list_classes[cnt] + " ")
+        for i in range(0, len(bboxes)):
+            centerPointx = (bboxes[i][0] + bboxes[i][2]) / 2 / x_size
+            centerPointy = (bboxes[i][1] + bboxes[i][3]) / 2 / y_size
+            width = abs(bboxes[i][0] - bboxes[i][2]) / x_size
+            height = abs(bboxes[i][1] - bboxes[i][3]) / y_size
+            file.write(str(class_ids[cnt]) + " ")
             file.write("{:.6f}".format(centerPointx) + " ")
             file.write("{:.6f}".format(centerPointy) + " ")
             file.write("{:.6f}".format(width) + " ")
@@ -149,21 +168,21 @@ def update_labels(vid_name, frame_num, labels_path, x_size, y_size):
     else:
         file = open("{}/{}_{}.txt".format(labels_path, vid_name, frame_num), "w")
         cnt = 0
-        for i in range(0, len(frame_list)):
-            centerPointx = (frame_list[i][0] + frame_list[i][2]) / 2 / x_size
-            centerPointy = (frame_list[i][1] + frame_list[i][3]) / 2 / y_size
-            width = abs(frame_list[i][0] - frame_list[i][2]) / x_size
-            height = abs(frame_list[i][1] - frame_list[i][3]) / y_size
-            file.write(frame_list_classes[cnt] + " ")
+        for i in range(0, len(bboxes)):
+            centerPointx = (bboxes[i][0] + bboxes[i][2]) / 2 / x_size
+            centerPointy = (bboxes[i][1] + bboxes[i][3]) / 2 / y_size
+            width = abs(bboxes[i][0] - bboxes[i][2]) / x_size
+            height = abs(bboxes[i][1] - bboxes[i][3]) / y_size
+            file.write(str(class_ids[cnt]) + " ")
             file.write("{:.6f}".format(centerPointx) + " ")
             file.write("{:.6f}".format(centerPointy) + " ")
             file.write("{:.6f}".format(width) + " ")
             file.write("{:.6f}".format(height) + "\n")
             cnt += 1
 
-    # Make frame_list ready for next annotations
-    frame_list = []
-    frame_list_classes = []
+    # Make bboxes ready for next annotations
+    bboxes = []
+    class_ids = []
 
 
 def save_annotated_frames(vid_name, anno_frame, frame_num, anno_frames_path):
@@ -252,49 +271,46 @@ def change_class_name(vid_name, frame_num, labels_path):
 def annotation_from_local_video(
         video_path, fps, x_size, y_size,
         frames_path, labels_path, annotated_frames_path):
-    global frame_list, display_frame, desired_deletes, desired_change_name, zoom_level, zoom_step
+    global bboxes, display_frame, desired_deletes, desired_change_name, zoom_level, zoom_step
     # Zoom level and step size for each scroll
     zoom_level = 1
     zoom_step = 0.1
 
-    # Capture Video
-    captured = cv2.VideoCapture(video_path)
+    # tracking function
+    track_fn = dt_obj.track_video(
+        video_path, output_dir="./temp",
+        save_result=False, display=False,
+        filter_classes=filter_classes)
+
     video_name = os.path.basename(video_path).split(".")[0]
 
-    frame_num = 0
-    while True:
-        # Capture frame-by-frame
-        ret, frame = captured.read()
-        frame = cv2.resize(frame, (x_size, y_size))
-        display_frame = frame
-        # Get the size of the image
-        rows, cols, _ = display_frame.shape
-        # Get the center of the image
-        center = (cols // 2, rows // 2)
-        # Display the resulting frame
-        cv2.imshow("window", frame)
+    # Loop over track_fn to retrieve outputs of each frame
+    for bbox_details, frame_details in track_fn:
+        bboxes, track_ids, _, class_ids = bbox_details
+        display_frame, frame_num, _ = frame_details
+        # Save raw frames
+        # cv2.imwrite("{}/{}_{}.jpg".format(frames_path, video_name, frame_num), display_frame)
 
-        # !!! Save raw frames
-        # cv2.imwrite("{}/{}.jpg".format(frames_path, frame_num), frame)
-        print(frame_num)
+        # draw initial bboxes
+        bboxes = list(bboxes)
+        display_frame = helpers.init_frame(display_frame, bboxes, class_ids)
+        display_frame = cv2.resize(display_frame, (x_size, y_size))
 
-        key = cv2.waitKey(fps)  # fps variable is actually states the delay in milliseconds
+        # display initial detections
+        cv2.imshow("window", display_frame)
+        key = cv2.waitKey(50) & 0xFF  # determines display fps
 
         # Stop video if "q" pressed
-        if key & 0xFF == ord("q"):
+        if key == ord("q"):
             break
 
         if key & 0xFF == ord("a"):
             print("Annotation Mode opened, video paused!")
             cv2.setMouseCallback('window', mouse_click)
-            key = cv2.waitKey(0) & 0xFF
-            cv2.setMouseCallback('window', mouse_click)
-            # Setting zoom level and step size to their original values
-            zoom_level = 1
-            zoom_step = 0.1
+            cv2.waitKey(0)
 
             # Update Labels if you get any x and y values
-            if len(frame_list) != 0:
+            if len(bboxes) != 0:
                 print("Saving annotated frames")
                 save_annotated_frames(video_name, display_frame, frame_num, annotated_frames_path)
                 print("Saving labels of annotated frames")
@@ -309,8 +325,5 @@ def annotation_from_local_video(
                 print("Changing class names of desired labels")
                 change_class_name(video_name, frame_num, labels_path)
 
-        frame_num += 1
-
     # When everything done, release the capture
-    captured.release()
     cv2.destroyAllWindows()
