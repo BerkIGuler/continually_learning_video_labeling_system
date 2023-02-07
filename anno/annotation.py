@@ -48,13 +48,15 @@ def mouse_click(event, x, y, flags, param):
         pressed = False
 
         # Get the class with keyboard
-        key = cv2.waitKey(0)
+        key = cv2.waitKey(0) & 0xFF
         selected_class_id = helpers.select_class_by_keyboard(key)
 
         current_box = BBox(
             coords = helpers.to_ordered_xyxy(ix, iy, x, y),
             color = cfg.id_to_color[selected_class_id],
-            class_id = selected_class_id)
+            class_id = selected_class_id,
+            frame_width=cfg.config["X_SIZE"],
+            frame_height=cfg.config["Y_SIZE"])
 
         boxes.append(current_box)
         print(current_box.coords)
@@ -82,73 +84,17 @@ def mouse_click(event, x, y, flags, param):
         desired_change_point.append((x, y))
 
         # Get desired class name
-        key = cv2.waitKey(0)
-        if key == ord("1"):
-            class_ids.append(7) # Person
-        elif key == ord("2"):
-            class_ids.append(1) # Car
-        elif key == ord("3"):
-            class_ids.append(24) # Apartment
-        elif key == ord("4"):
-            class_ids.append(32) # Forest
-        elif key == ord("5"):
-            class_ids.append(31)  # Cloud
-
-    if event == cv2.EVENT_MOUSEWHEEL:
-        print("Mouse wheel touched")
-        # If the mouse scroll is moved up, zoom in
-        if flags > 0:
-            print((x, y))
-            zoom_level += zoom_step
-            print(zoom_level)
-            display_frame = cv2.resize(
-                display_frame, None, fx=zoom_level,
-                fy=zoom_level, interpolation=cv2.INTER_LINEAR)
-            cv2.imshow("window", display_frame)
-        # If the mouse scroll is moved down, zoom out
-        elif flags < 0:
-            print((x, y))
-            zoom_level -= zoom_step
-            print(zoom_level)
-            display_frame = cv2.resize(
-                display_frame, None, fx=zoom_level,
-                fy=zoom_level, interpolation=cv2.INTER_LINEAR)
-
-            # Get the new size of the image
-            # rows, cols, _ = display_frame.shape
-            # Get the new center of the image
-            # new_center = (x,y)
-            # Calculate the translation to keep the center at the same position
-            # Middle = np.float32([[1, 0, new_center[0] - center[0]], [0, 1, new_center[1] - center[1]]])
-            # display_frame = cv2.warpAffine(display_frame, new_center, (cols, rows))
-
-            cv2.imshow("window", display_frame)
-
+        key = cv2.waitKey(0) & 0xFF
+        selected_class_id = helpers.select_class_by_keyboard(key)
 
 def update_labels(vid_name, frame_num, x_size, y_size):
     global boxes
     labels_dir = cfg.config["LABELS_DIR"]
 
-    # if os.path.exists("{}/{}_{}.txt".format(labels_dir, vid_name, frame_num)):
-    #     file = open("{}/{}_{}.txt".format(labels_dir, vid_name, frame_num), "a")
-    #     for i in range(0, len(bboxes)):
-    #         centerPointx = (bboxes[i][0] + bboxes[i][2]) / 2 / x_size
-    #         centerPointy = (bboxes[i][1] + bboxes[i][3]) / 2 / y_size
-    #         width = abs(bboxes[i][0] - bboxes[i][2]) / x_size
-    #         height = abs(bboxes[i][1] - bboxes[i][3]) / y_size
-    #         file.write(str(class_ids[cnt]) + " ")
-    #         file.write("{:.6f}".format(centerPointx) + " ")
-    #         file.write("{:.6f}".format(centerPointy) + " ")
-    #         file.write("{:.6f}".format(width) + " ")
-    #         file.write("{:.6f}".format(height) + "\n")
-
-    # # If there is not any label yet, create and write
-    # else:
-
     with open(f"{labels_dir}/{vid_name}_{frame_num}.txt", "w") as fp:
         file_content = []
         for i, box in enumerate(boxes):
-            file_content.append(helpers.xyxy_to_yolo(box, x_size, y_size))
+            file_content.append(helpers.xyxy_to_yolo(box))
         fp.write("\n".join(file_content))
 
     # Make bboxes ready for next annotations
@@ -254,10 +200,12 @@ def annotation_from_local_video(video_path):
         if cfg.config["SAVE_RAW"]:
             cv2.imwrite(f"{frames_path}/{video_name}_{frame_num}.jpg", display_frame)
 
-        # insert initial bboxes on frame
-        display_frame, boxes = helpers.init_frame(display_frame, bboxes, class_ids, track_ids)
-        display_frame = cv2.resize(display_frame, (x_size, y_size))
+        original_width, original_height = display_frame.shape[0], display_frame.shape[1]
 
+        # insert initial bboxes on frame
+        display_frame, boxes = helpers.init_frame(display_frame, bboxes, class_ids, track_ids,
+                                                  original_width, original_height)
+        display_frame = cv2.resize(display_frame, (x_size, y_size))
         # display initial detections
         cv2.imshow("window", display_frame)
         key = cv2.waitKey(50) & 0xFF  # determines display fps
@@ -266,7 +214,7 @@ def annotation_from_local_video(video_path):
         if key == ord("q"):
             break
 
-        elif key & 0xFF == ord("a"):
+        elif key == ord("a"):
             print("Annotation Mode opened, video paused!")
             cv2.setMouseCallback('window', mouse_click)
             cv2.waitKey(0)
