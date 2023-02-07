@@ -5,14 +5,16 @@ import cfg
 
 
 class BBox:
-    def __init__(self, coords=None, color=None, class_id=None, track_id=None):
+    def __init__(self, coords=None, color=None, class_id=None, track_id=None, frame_width=None, frame_height=None):
         self.coords = coords
         self.color = color
         self.class_id = class_id
         self.track_id = track_id
+        self.frame_width = frame_width
+        self.frame_height = frame_height
 
 
-def init_frame(frame, bboxes, ids, track_ids):
+def init_frame(frame, bboxes, ids, track_ids, x_size, y_size):
     boxes = []
 
     if not isinstance(bboxes, list):
@@ -28,7 +30,9 @@ def init_frame(frame, bboxes, ids, track_ids):
             coords=bbox,
             color=cfg.id_to_color[c_id],
             class_id=c_id,
-            track_id=t_id
+            track_id=t_id,
+            frame_height=x_size,
+            frame_width=y_size
         ))
 
     return frame, boxes
@@ -59,12 +63,12 @@ def select_class_by_keyboard(key):
     return selected_class_id
 
 
-def xyxy_to_yolo(box, x_size, y_size):
+def xyxy_to_yolo(box):
     x1, y1, x2, y2 = box.coords
-    w = abs(x2 - x1) / x_size
-    h = abs(y2 - y1) / y_size
-    xc = (x1 + x2) / (2 * x_size)
-    yc = (y1 + y2) / (2 * y_size)
+    w = abs(x2 - x1) / box.frame_width
+    h = abs(y2 - y1) / box.frame_height
+    xc = (x1 + x2) / (2 * box.frame_width)
+    yc = (y1 + y2) / (2 * box.frame_height)
     yolo_formatted = f"{box.class_id} {xc:.5} {yc:.5} {w:.5} {h:.5}"
     return yolo_formatted
 
@@ -75,6 +79,7 @@ def to_ordered_xyxy(ix, iy, x, y):
     y1, y2 = (iy, y) if iy < y else (y, iy)
 
     return [x1, y1, x2, y2]
+
 
 
 if __name__ == "__main__":
