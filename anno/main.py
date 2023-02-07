@@ -8,7 +8,6 @@ def main():
     cfg.init_config()
     # sample_video
     sample_video_path = os.path.join(cfg.config["VIDEO_DIR"], "test_vid.mp4")
-
     annotation.annotation_from_local_video(sample_video_path)
 
 
