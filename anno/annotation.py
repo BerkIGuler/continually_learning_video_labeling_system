@@ -20,8 +20,7 @@ desired_change_point = []
 
 pressed = False
 frame_cache = None
-zoom_level = 1
-zoom_step = 0.1
+empty_frame = None
 
 dt_obj = ASOne(
     tracker=asone.DEEPSORT,
@@ -31,7 +30,7 @@ dt_obj = ASOne(
 
 def mouse_click(event, x, y, flags, param):
     global boxes, display_frame, ix, iy, desired_deletes,\
-        desired_change_name, pressed, frame_cache
+        desired_change_name, pressed, frame_cache, empty_frame
 
     if event == cv2.EVENT_LBUTTONDOWN:
         ix, iy = x, y
@@ -39,12 +38,12 @@ def mouse_click(event, x, y, flags, param):
         # copy frame
         frame_cache = copy.deepcopy(display_frame)
 
-    if pressed and event == cv2.EVENT_MOUSEMOVE:
+    elif pressed and event == cv2.EVENT_MOUSEMOVE:
         cv2.rectangle(frame_cache, (ix, iy), (x, y), (0, 0, 255), 2)
         cv2.imshow("window", frame_cache)
         frame_cache = copy.deepcopy(display_frame)
 
-    if event == cv2.EVENT_LBUTTONUP:
+    elif event == cv2.EVENT_LBUTTONUP:
         pressed = False
 
         # Get the class with keyboard
@@ -59,7 +58,7 @@ def mouse_click(event, x, y, flags, param):
             frame_height=cfg.config["Y_SIZE"])
 
         boxes.append(current_box)
-        print(current_box.coords)
+        print(current_box.coords)  # TEMP, FOR DEBUGGING
 
         # Draw bounding box
         cv2.rectangle(
@@ -74,9 +73,12 @@ def mouse_click(event, x, y, flags, param):
 
         cv2.imshow("window", display_frame)
 
-    if event == cv2.EVENT_RBUTTONDOWN:
+    elif event == cv2.EVENT_RBUTTONDOWN:
         print("Right clicked: ", x, y)
-        desired_deletes.append((x, y))
+        helpers.activate_box(boxes, x, y, cfg.config["X_SIZE"], cfg.config["Y_SIZE"])
+        helpers.init_frame(empty_frame, boxes)
+        cv2.imshow("window", empty_frame)
+
 
     # If middle button is clicked
     if event == cv2.EVENT_MBUTTONDOWN:
@@ -175,12 +177,7 @@ def change_class_name(vid_name, frame_num, labels_path):
 
 
 def annotation_from_local_video(video_path):
-    global boxes, display_frame, desired_deletes, \
-        desired_change_name, zoom_level, zoom_step
-
-    # Zoom level and step size for each scroll
-    zoom_level = 1
-    zoom_step = 0.1
+    global boxes, display_frame, empty_frame
 
     frames_path = cfg.config["FRAMES_DIR"]
     anno_frames_dir = cfg.config["ANNOTATED_FRAMES_DIR"]
@@ -199,17 +196,19 @@ def annotation_from_local_video(video_path):
     for bbox_details, frame_details in track_fn:
         bboxes, track_ids, _, class_ids = bbox_details
         display_frame, frame_num, _ = frame_details
+
         if cfg.config["SAVE_RAW"]:
             cv2.imwrite(f"{frames_path}/{video_name}_{frame_num}.jpg", display_frame)
 
         original_width, original_height = \
             display_frame.shape[0], display_frame.shape[1]
 
-        # insert initial bboxes on frame
-        display_frame, boxes = helpers.init_frame(
-            display_frame, bboxes, class_ids,
-            track_ids, original_width, original_height)
+        boxes = helpers.init_boxes(
+            bboxes, class_ids, track_ids,
+            original_width, original_height)
         display_frame = cv2.resize(display_frame, (x_size, y_size))
+        empty_frame = copy.deepcopy(display_frame)
+        display_frame = helpers.init_frame(display_frame, boxes)
         # display initial detections
         cv2.imshow("window", display_frame)
         key = cv2.waitKey(50) & 0xFF  # determines display fps
