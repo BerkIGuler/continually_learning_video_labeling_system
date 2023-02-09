@@ -88,9 +88,12 @@ def mouse_click(event, x, y, flags, param):
         selected_class_id = helpers.select_class_by_keyboard(key)
 
 
-def update_labels(vid_name, frame_num):
+def update_labels(vid_name, frame_num, Annotated: bool):
     global boxes
-    labels_dir = cfg.config["LABELS_DIR"]
+    if Annotated:
+        labels_dir = cfg.config["EDITED_LABELS_DIR"]
+    else:
+        labels_dir = cfg.config["LABELS_DIR"]
 
     with open(f"{labels_dir}/{vid_name}_{frame_num}.txt", "w") as fp:
         file_content = []
@@ -210,6 +213,10 @@ def annotation_from_local_video(video_path):
             display_frame, bboxes, class_ids,
             track_ids, original_width, original_height)
         display_frame = cv2.resize(display_frame, (x_size, y_size))
+
+        # if flag is true, save non annotated frame labels
+        if cfg.config["SAVE_NON_ANNOTATED_FRAME_LABEL_BBOX"]:
+            update_labels(video_name, frame_num, Annotated=False)
         # display initial detections
         cv2.imshow("window", display_frame)
         key = cv2.waitKey(50) & 0xFF  # determines display fps
@@ -227,7 +234,7 @@ def annotation_from_local_video(video_path):
                 if cfg.config["SAVE_ANNOTATED_FRAMES"]:
                     cv2.imwrite(f"{anno_frames_dir}/{video_name}_{frame_num}.jpg", display_frame)
 
-                update_labels(video_name, frame_num)
+                update_labels(video_name, frame_num, Annotated=True)
 
             # If right is clicked, and it is desired to delete some labels
             if len(desired_deletes) > 0:

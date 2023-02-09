@@ -1,15 +1,17 @@
-FRAMES_DIR: ./frames
-ANNOTATED_FRAMES_DIR: ./anno_frames
-LABELS_DIR: ./labels
+FRAMES_DIR: ./data/frames
+ANNOTATED_FRAMES_DIR: ./data/anno_frames
+LABELS_DIR: ./data/labels
+EDITED_LABELS_DIR: ./data/edited_labels
 VIDEO_DIR: ./videos
-ORIGINAL_DIR: ./yolo_dsort
+ORIGINAL_DIR: ./data/yolo_dsort
 
 FILTERED_CLASSES: None
 
 SAVE_RAW: False
 SAVE_ORIGINAL: False
 DISPLAY_ORIGINAL: False
-SAVE_ANNOTATED_FRAMES: False
+SAVE_ANNOTATED_FRAMES: True
+SAVE_NON_ANNOTATED_FRAME_LABEL_BBOX: True
 
 X_SIZE: 800
 Y_SIZE: 600
