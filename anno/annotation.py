@@ -29,8 +29,8 @@ dt_obj = ASOne(
 
 
 def mouse_click(event, x, y, flags, param):
-    global boxes, display_frame, ix, iy, desired_deletes,\
-        desired_change_name, pressed, frame_cache, empty_frame
+    global boxes, display_frame, ix, iy, \
+        pressed, frame_cache, empty_frame
 
     if event == cv2.EVENT_LBUTTONDOWN:
         ix, iy = x, y
@@ -74,10 +74,11 @@ def mouse_click(event, x, y, flags, param):
         cv2.imshow("window", display_frame)
 
     elif event == cv2.EVENT_RBUTTONDOWN:
-        print("Right clicked: ", x, y)
+        print("Right clicked: ", x, y) # TEMP, FOR DEBUG
         helpers.activate_box(boxes, x, y, cfg.config["X_SIZE"], cfg.config["Y_SIZE"])
         helpers.init_frame(empty_frame, boxes)
-        cv2.imshow("window", empty_frame)
+        display_frame = empty_frame
+        cv2.imshow("window", display_frame)
 
 
     # If middle button is clicked
@@ -183,6 +184,7 @@ def annotation_from_local_video(video_path):
     anno_frames_dir = cfg.config["ANNOTATED_FRAMES_DIR"]
     x_size = cfg.config["X_SIZE"]
     y_size = cfg.config["Y_SIZE"]
+
     # vid name without file extension
     video_name = os.path.basename(video_path).split(".")[0]
 
@@ -200,15 +202,15 @@ def annotation_from_local_video(video_path):
         if cfg.config["SAVE_RAW"]:
             cv2.imwrite(f"{frames_path}/{video_name}_{frame_num}.jpg", display_frame)
 
-        original_width, original_height = \
-            display_frame.shape[0], display_frame.shape[1]
+        original_height, original_width = display_frame.shape[:2]
 
         boxes = helpers.init_boxes(
             bboxes, class_ids, track_ids,
             original_width, original_height)
+
         display_frame = cv2.resize(display_frame, (x_size, y_size))
         empty_frame = copy.deepcopy(display_frame)
-        display_frame = helpers.init_frame(display_frame, boxes)
+        helpers.init_frame(display_frame, boxes)
         # display initial detections
         cv2.imshow("window", display_frame)
         key = cv2.waitKey(50) & 0xFF  # determines display fps
