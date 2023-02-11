@@ -86,9 +86,12 @@ def mouse_click(event, x, y, flags, param):
         cv2.imshow("window", display_frame)
 
 
-def update_labels(vid_name, frame_num):
+def update_labels(vid_name, frame_num, annotated: bool):
     global boxes
-    labels_dir = cfg.config["LABELS_DIR"]
+    if annotated:
+        labels_dir = cfg.config["EDITED_LABELS_DIR"]
+    else:
+        labels_dir = cfg.config["LABELS_DIR"]
 
     with open(f"{labels_dir}/{vid_name}_{frame_num}.txt", "w") as fp:
         file_content = []
@@ -97,8 +100,8 @@ def update_labels(vid_name, frame_num):
         fp.write("\n".join(file_content))
 
     # Make bboxes ready for next annotations
-    boxes = []
-
+    if annotated:  # To make annotated label.txt have all label data
+        boxes = []
 
 def annotation_from_local_video(video_path):
     global boxes, display_frame, empty_frame
@@ -124,6 +127,9 @@ def annotation_from_local_video(video_path):
 
         if cfg.config["SAVE_RAW"]:
             cv2.imwrite(f"{frames_path}/{video_name}_{frame_num}.jpg", display_frame)
+            
+        if cfg.config["SAVE_NON_EDITED_FRAMES"]:
+            update_labels(video_name, frame_num, annotated=False)
 
         original_height, original_width = display_frame.shape[:2]
 
@@ -134,10 +140,11 @@ def annotation_from_local_video(video_path):
         display_frame = cv2.resize(display_frame, (x_size, y_size))
         empty_frame = copy.deepcopy(display_frame)
         helpers.init_frame(display_frame, boxes)
+        
         # display yolo detections
         cv2.imshow("window", display_frame)
+        
         key = cv2.pollKey() & 0xFF
-        print(key)
         # quit program if "q" pressed
         if key == ord("a"):
             break
@@ -148,9 +155,9 @@ def annotation_from_local_video(video_path):
             print("Annotation Mode opened, video paused!")
 
             if len(boxes) != 0:
-                if cfg.config["SAVE_ANNOTATED_FRAMES"]:
+                if cfg.config["SAVE_EDITED_FRAMES"]:
                     cv2.imwrite(f"{anno_frames_dir}/{video_name}_{frame_num}.jpg", display_frame)
 
-                update_labels(video_name, frame_num)
+                    update_labels(video_name, frame_num, Annotated=True)
 
     cv2.destroyAllWindows()
