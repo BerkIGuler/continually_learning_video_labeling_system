@@ -52,7 +52,7 @@ def init_config():
 # for testing only
 if __name__ == "__main__":
     init_config()
-    print(type(config["VIDEO_DIR"]))
+    print(type(config["X_SIZE"]))
     print(type(id_to_color[0]))
     print(id_to_color[0])
     print(id_to_class)
