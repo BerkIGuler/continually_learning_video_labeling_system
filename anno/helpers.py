@@ -166,7 +166,7 @@ def select_class_by_keyboard(key):
     elif key == ord("5"):
         selected_class_id = 31  # cloud
     else:
-        raise "nondefined class_id\nEnter a valid key"
+        raise ValueError("undefined class_id... Enter a valid key")
 
     return selected_class_id
 
@@ -229,6 +229,21 @@ def to_ordered_xyxy(ix, iy, x, y):
     y1, y2 = (iy, y) if iy < y else (y, iy)
 
     return [x1, y1, x2, y2]
+
+
+def modify_active_box(boxes, task="delete", new_class_id=None):
+    for i, box in enumerate(boxes):
+        if box.state == "active":
+            if task == "delete":
+                boxes.remove(box)
+            elif task == "update_label" and new_class_id is not None:
+                try:
+                    box.color = cfg.id_to_color[new_class_id],
+                    box.class_id = new_class_id,
+                except KeyError("invalid_new_class_id")as err:
+                    print('enter a valid class id to assign a new label', err)
+            else:
+                raise ValueError("task must be either 'delete' or 'update_label'")
 
 
 def activate_box(boxes, x, y, x_size, y_size):
