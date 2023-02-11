@@ -88,9 +88,9 @@ def mouse_click(event, x, y, flags, param):
         selected_class_id = helpers.select_class_by_keyboard(key)
 
 
-def update_labels(vid_name, frame_num, Annotated: bool):
+def update_labels(vid_name, frame_num, annotated: bool):
     global boxes
-    if Annotated:
+    if annotated:
         labels_dir = cfg.config["EDITED_LABELS_DIR"]
     else:
         labels_dir = cfg.config["LABELS_DIR"]
@@ -102,7 +102,7 @@ def update_labels(vid_name, frame_num, Annotated: bool):
         fp.write("\n".join(file_content))
 
     # Make bboxes ready for next annotations
-    if Annotated:  # To make annotated label.txt have all label data
+    if annotated:  # To make annotated label.txt have all label data
         boxes = []
 
 def delete_labels(vid_name, frame_num, labels_path):
@@ -216,7 +216,7 @@ def annotation_from_local_video(video_path):
 
         # if flag is true, save non edited frame labels
         if cfg.config["SAVE_NON_EDITED_FRAMES"]:
-            update_labels(video_name, frame_num, Annotated=False)
+            update_labels(video_name, frame_num, annotated=False)
 
         # display initial detections
         cv2.imshow("window", display_frame)
