@@ -1,0 +1,8 @@
+**__pycache__**
+# model files
+*.onnx
+*.pt
+*.pth
+*.t7
+# pycharm project folder
+.idea/
