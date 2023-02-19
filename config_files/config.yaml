@@ -7,8 +7,8 @@ ORIGINAL_DIR: ./data/yolo_dsort
 
 FILTERED_CLASSES: None
 
-SAVE_RAW: False
-SAVE_ORIGINAL: False
+SAVE_RAW: False  # if True save raw frames
+SAVE_ORIGINAL: False  # if True saves tracker+detection outputs as a seperate video
 DISPLAY_ORIGINAL: False
 SAVE_EDITED_FRAMES: False
 SAVE_NON_EDITED_FRAMES: False

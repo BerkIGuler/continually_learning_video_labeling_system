@@ -156,15 +156,15 @@ def xywh_to_xyxy(x, y, w, h):
 
 def select_class_by_keyboard(key):
     if key == ord("1"):
-        selected_class_id = 0  # person
+        selected_class_id = 1  # person
     elif key == ord("2"):
-        selected_class_id = 1  # car
+        selected_class_id = 2  # car
     elif key == ord("3"):
-        selected_class_id = 24  # apartment
+        selected_class_id = 3  # apartment
     elif key == ord("4"):
-        selected_class_id = 32  # forest
+        selected_class_id = 4  # forest
     elif key == ord("5"):
-        selected_class_id = 31  # cloud
+        selected_class_id = 5  # cloud
     else:
         raise ValueError("undefined class_id... Enter a valid key")
 
@@ -253,12 +253,11 @@ def activate_box(boxes, x, y, x_size, y_size):
     by its x and y coordinates, as well as the dimensions of
     the coordinate system. The function first normalizes the
     point's coordinates, and calculates the Euclidean distance
-    from each box center. Only one box is assigned active status
+    from each box center. Only one box is assigned an active status
     at a time
 
     Args:
-        boxes (list): List of boxes. Each box is represented as a
-            tuple `(c_id, xc, yc, w, h)`.
+        boxes (list): List of boxes. Each box is a BBox object
         x (float): The x-coordinate of the point.
         y (float): The y-coordinate of the point.
         x_size (float): The size of the x-dimension of the coordinate system.
