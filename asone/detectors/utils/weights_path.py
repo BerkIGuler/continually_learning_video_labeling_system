@@ -87,9 +87,6 @@ weights = { '0': os.path.join('yolov5','weights','yolov5x6.pt'),
             '79': os.path.join('yolov8','weights','yolov8l.onnx'),
             '80': os.path.join('yolov8','weights','yolov8x.pt'),
             '81': os.path.join('yolov8','weights','yolov8x.onnx')
-
-
-
 }
 
 def get_weight_path(model_flag):
