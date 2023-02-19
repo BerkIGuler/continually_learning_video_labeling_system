@@ -5,7 +5,7 @@ import cfg
 
 def main():
     cfg.init_config()
-    # sample_videoa
+    # sample_video
     sample_video_path = os.path.join(cfg.config["VIDEO_DIR"], "test_vid.mp4")
     annotation.annotate(sample_video_path)
 

@@ -42,11 +42,9 @@ def mouse_click(event, x, y, flags, param):
 
     elif event == cv2.EVENT_LBUTTONUP:
         pressed = False
-
-        # Get the class with keyboard
+        # Get the class id with keyboard
         key = cv2.waitKey(0) & 0xFF
         selected_class_id = helpers.select_class_by_keyboard(key)
-
         current_box = BBox(
             coords=helpers.to_ordered_xyxy(ix, iy, x, y),
             color=cfg.id_to_color[selected_class_id],
@@ -54,21 +52,16 @@ def mouse_click(event, x, y, flags, param):
             frame_width=cfg.config["X_SIZE"],
             frame_height=cfg.config["Y_SIZE"]
         )
-
         boxes.append(current_box)
-        print(current_box.coords)  # TEMP, FOR DEBUGGING
-
         # Draw bounding box
         cv2.rectangle(
             display_frame, current_box.coords[:2],
             current_box.coords[2:], current_box.color, 1)
-        text_position = (min(current_box.coords[0], current_box.coords[2]),
-                         min(current_box.coords[1], current_box.coords[3]) - 5)
+        text_position = (current_box.coords[0], current_box.coords[1] - 5)
         cv2.putText(
             display_frame, cfg.id_to_class[current_box.class_id], text_position,
             cv2.FONT_HERSHEY_SIMPLEX, 0.5, current_box.color, 1,
             cv2.LINE_4)
-
         cv2.imshow("window", display_frame)
 
     elif event == cv2.EVENT_RBUTTONDOWN:
@@ -143,7 +136,6 @@ def annotate(video_path):
             cv2.imwrite(f"{frames_path}/{video_name}_{frame_num}.jpg", display_frame)
 
         original_height, original_width = display_frame.shape[:2]
-
         boxes = helpers.init_boxes(
             bboxes, class_ids, track_ids,
             original_width, original_height)
