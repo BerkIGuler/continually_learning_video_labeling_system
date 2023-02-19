@@ -65,19 +65,22 @@ def mouse_click(event, x, y, flags, param):
         cv2.imshow("window", display_frame)
 
     elif event == cv2.EVENT_RBUTTONDOWN:
-        helpers.activate_box(boxes, x, y, cfg.config["X_SIZE"], cfg.config["Y_SIZE"])
+        delete_bbox = helpers.activate_box(boxes, x, y, cfg.config["X_SIZE"], cfg.config["Y_SIZE"])
         cache_empty_frame = copy.deepcopy(empty_frame)
-        helpers.init_frame(empty_frame, boxes)
-        display_frame = empty_frame
-        cv2.imshow("window", display_frame)
-        key = cv2.waitKey(0) & 0xFF
-        selected_class_id = helpers.select_class_by_keyboard(key)
-        helpers.modify_active_box(
-            boxes, task="update_label",
-            new_class_id=selected_class_id)
         helpers.init_frame(cache_empty_frame, boxes)
-        display_frame = cache_empty_frame
-        cv2.imshow("window", display_frame)
+        cv2.imshow("window", cache_empty_frame)
+        if delete_bbox:
+            helpers.modify_active_box(
+                boxes, task="delete")
+        else:
+            key = cv2.waitKey(0) & 0xFF
+            selected_class_id = helpers.select_class_by_keyboard(key)
+            helpers.modify_active_box(
+                boxes, task="update_label",
+                new_class_id=selected_class_id)
+        cache_empty_frame = copy.deepcopy(empty_frame)
+        helpers.init_frame(cache_empty_frame, boxes)
+        cv2.imshow("window", cache_empty_frame)
 
 
 def update_labels(vid_name, frame_num, annotated: bool):
@@ -103,8 +106,8 @@ def annotate(video_path):
 
     frames_path = cfg.config["FRAMES_DIR"]  # raw frames
     anno_frames_dir = cfg.config["ANNOTATED_FRAMES_DIR"]
-    x_size = cfg.config["X_SIZE"]
-    y_size = cfg.config["Y_SIZE"]
+    x_size_window = cfg.config["X_SIZE"]
+    y_size_window = cfg.config["Y_SIZE"]
     # vid name without file extension
     video_name = os.path.basename(video_path).split(".")[0]
 
@@ -139,8 +142,7 @@ def annotate(video_path):
         boxes = helpers.init_boxes(
             bboxes, class_ids, track_ids,
             original_width, original_height)
-
-        display_frame = cv2.resize(display_frame, (x_size, y_size))
+        display_frame = cv2.resize(display_frame, (x_size_window, y_size_window))
         empty_frame = copy.deepcopy(display_frame)
         helpers.init_frame(display_frame, boxes)
 

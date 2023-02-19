@@ -123,6 +123,7 @@ def init_frame(frame, boxes):
     Returns:
         None. The `frame` is updated with the boxes.
     """
+    # if boxes empty
     if not boxes:
         return
     frame_h, frame_w = frame.shape[:2]
@@ -156,15 +157,15 @@ def xywh_to_xyxy(x, y, w, h):
 
 def select_class_by_keyboard(key):
     if key == ord("1"):
-        selected_class_id = 1  # person
+        selected_class_id = 10
     elif key == ord("2"):
-        selected_class_id = 2  # car
+        selected_class_id = 20
     elif key == ord("3"):
-        selected_class_id = 3  # apartment
+        selected_class_id = 30
     elif key == ord("4"):
-        selected_class_id = 4  # forest
+        selected_class_id = 40
     elif key == ord("5"):
-        selected_class_id = 5  # cloud
+        selected_class_id = 50
     else:
         raise ValueError("undefined class_id... Enter a valid key")
 
@@ -238,9 +239,9 @@ def modify_active_box(boxes, task="delete", new_class_id=None):
                 boxes.remove(box)
             elif task == "update_label" and new_class_id is not None:
                 try:
-                    box.color = cfg.id_to_color[new_class_id],
-                    box.class_id = new_class_id,
-                except KeyError("invalid_new_class_id")as err:
+                    box.color = cfg.id_to_color[new_class_id]
+                    box.class_id = new_class_id
+                except KeyError("invalid_new_class_id") as err:
                     print('enter a valid class id to assign a new label', err)
             else:
                 raise ValueError("task must be either 'delete' or 'update_label'")
@@ -269,9 +270,12 @@ def activate_box(boxes, x, y, x_size, y_size):
     norm_x, norm_y = x / x_size, y / y_size
     closest_dist = MAX_DISTANCE
     candidate_box_id = None
+    already_active_id = None
     for i, box in enumerate(boxes):
         c_id, xc, yc, w, h = xyxy_to_yolo(box, return_type="tuple")
         euc_dist = math.sqrt((xc - norm_x) ** 2 + (yc - norm_y) ** 2)
+        if box.state == "active":
+            already_active_id = i
         if euc_dist < closest_dist and in_box(norm_x, norm_y, xc, yc, w, h):
             closest_dist = euc_dist
             candidate_box_id = i
@@ -281,6 +285,8 @@ def activate_box(boxes, x, y, x_size, y_size):
         for i, box in enumerate(boxes):
             if i != candidate_box_id and box.state == "active":
                 box.state = "passive"
+
+    return already_active_id == candidate_box_id
 
 
 def in_box(norm_x, norm_y, xc, yc, w, h):
