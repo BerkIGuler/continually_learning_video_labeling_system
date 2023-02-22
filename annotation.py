@@ -111,6 +111,9 @@ def annotate(video_path):
     # vid name without file extension
     video_name = os.path.basename(video_path).split(".")[0]
 
+    cv2.namedWindow("window", cv2.WINDOW_GUI_NORMAL)
+    cv2.resizeWindow("window", x_size_window, y_size_window)
+
     # tracking function
     track_fn = dt_obj.track_video(
         video_path, output_dir="./temp", save_result=cfg.config["SAVE_ORIGINAL"],
