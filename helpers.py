@@ -157,13 +157,13 @@ def xywh_to_xyxy(x, y, w, h):
 
 def select_class_by_keyboard(key):
     if key == ord("1"):
-        selected_class_id = 10
+        selected_class_id = 0
     elif key == ord("2"):
-        selected_class_id = 20
+        selected_class_id = 2
     elif key == ord("3"):
-        selected_class_id = 30
+        selected_class_id = 7
     elif key == ord("4"):
-        selected_class_id = 40
+        selected_class_id = 9
     elif key == ord("5"):
         selected_class_id = 50
     else:
