@@ -11,7 +11,6 @@ from asone import ASOne
 
 
 display_frame = None
-# initial x y
 ix, iy = 0, 0
 boxes = []
 
@@ -36,7 +35,7 @@ def mouse_click(event, x, y, flags, param):
         frame_cache = copy.deepcopy(display_frame)
 
     elif pressed and event == cv2.EVENT_MOUSEMOVE:
-        cv2.rectangle(frame_cache, (ix, iy), (x, y), (0, 0, 255), 2)
+        cv2.rectangle(frame_cache, (ix, iy), (x, y), (0, 0, 255), 1)
         cv2.imshow("window", frame_cache)
         frame_cache = copy.deepcopy(display_frame)
 
@@ -54,21 +53,15 @@ def mouse_click(event, x, y, flags, param):
         )
         boxes.append(current_box)
         # Draw bounding box
-        cv2.rectangle(
-            display_frame, current_box.coords[:2],
-            current_box.coords[2:], current_box.color, 1)
-        text_position = (current_box.coords[0], current_box.coords[1] - 5)
-        cv2.putText(
-            display_frame, cfg.id_to_class[current_box.class_id], text_position,
-            cv2.FONT_HERSHEY_SIMPLEX, 0.5, current_box.color, 1,
-            cv2.LINE_4)
+        display_frame = copy.deepcopy(empty_frame)
+        helpers.init_frame(display_frame, boxes)
         cv2.imshow("window", display_frame)
 
     elif event == cv2.EVENT_RBUTTONDOWN:
         delete_bbox = helpers.activate_box(boxes, x, y, cfg.config["X_SIZE"], cfg.config["Y_SIZE"])
-        cache_empty_frame = copy.deepcopy(empty_frame)
-        helpers.init_frame(cache_empty_frame, boxes)
-        cv2.imshow("window", cache_empty_frame)
+        display_frame = copy.deepcopy(empty_frame)
+        helpers.init_frame(display_frame, boxes)
+        cv2.imshow("window", display_frame)
         if delete_bbox:
             helpers.modify_active_box(
                 boxes, task="delete")
@@ -78,9 +71,9 @@ def mouse_click(event, x, y, flags, param):
             helpers.modify_active_box(
                 boxes, task="update_label",
                 new_class_id=selected_class_id)
-        cache_empty_frame = copy.deepcopy(empty_frame)
-        helpers.init_frame(cache_empty_frame, boxes)
-        cv2.imshow("window", cache_empty_frame)
+        display_frame = copy.deepcopy(empty_frame)
+        helpers.init_frame(display_frame, boxes)
+        cv2.imshow("window", display_frame)
 
 
 def update_labels(vid_name, frame_num, annotated: bool):
@@ -108,7 +101,6 @@ def annotate(video_path):
     anno_frames_dir = cfg.config["ANNOTATED_FRAMES_DIR"]
     x_size_window = cfg.config["X_SIZE"]
     y_size_window = cfg.config["Y_SIZE"]
-    # vid name without file extension
     video_name = os.path.basename(video_path).split(".")[0]
 
     cv2.namedWindow("window", cv2.WINDOW_GUI_NORMAL)
@@ -120,7 +112,6 @@ def annotate(video_path):
         display=cfg.config["DISPLAY_ORIGINAL"],
         filter_classes=cfg.config["FILTERED_CLASSES"])
 
-    # Loop over track_fn to retrieve outputs of each frame
     for bbox_details, frame_details, action in track_fn:
         if action == "stream":
             bboxes, track_ids, _, class_ids = bbox_details
@@ -128,7 +119,9 @@ def annotate(video_path):
         elif action == "annotation":
             cv2.setMouseCallback('window', mouse_click)
             logger.info("Annotation Mode opened, video paused!")
-            cv2.waitKey(0)
+            key = cv2.waitKey(0) & 0xFF  # stop the video
+            while key != 27:  # press ESC to quit anno mode
+                key = cv2.waitKey(0) & 0xFF
             # deactivate mouse event trigger
             cv2.setMouseCallback('window', lambda *args: None)
 
@@ -149,10 +142,10 @@ def annotate(video_path):
         empty_frame = copy.deepcopy(display_frame)
         helpers.init_frame(display_frame, boxes)
 
-        if cfg.config["SAVE_NON_EDITED_FRAMES"]:
-            update_labels(video_name, frame_num, annotated=False)
-
         # display yolo detections
         cv2.imshow("window", display_frame)
+
+        if cfg.config["SAVE_NON_EDITED_FRAMES"]:
+            update_labels(video_name, frame_num, annotated=False)
 
     cv2.destroyAllWindows()

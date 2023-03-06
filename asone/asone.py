@@ -137,9 +137,9 @@ class ASOne:
         tic = time.time()
         while True:
             key = cv2.waitKey(1) & 0xFF
-            if key == ord('q'):
+            if key == 27:
                 break
-            elif key == ord('a'):
+            elif key == 32:
                 yield "", "", "annotation"
 
             start_time = time.time()

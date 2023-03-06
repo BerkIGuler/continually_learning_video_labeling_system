@@ -139,10 +139,10 @@ def init_frame(frame, boxes):
                 cv2.FONT_HERSHEY_SIMPLEX, 0.5, cfg.id_to_color[box.class_id], 1,
                 cv2.LINE_4)
         elif box.state == "active":
-            cv2.rectangle(frame, box.coords[:2], box.coords[2:], RED_RGB, 1)
+            cv2.rectangle(frame, box.coords[:2], box.coords[2:], RED_RGB, 2)
             cv2.putText(
                 frame, cfg.id_to_class[box.class_id], (box.coords[0], box.coords[1] - 5),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.5, RED_RGB, 1,
+                cv2.FONT_HERSHEY_SIMPLEX, 0.5, RED_RGB, 2,
                 cv2.LINE_4)
 
 
@@ -245,6 +245,7 @@ def modify_active_box(boxes, task="delete", new_class_id=None):
                     print('enter a valid class id to assign a new label', err)
             else:
                 raise ValueError("task must be either 'delete' or 'update_label'")
+            box.state = "passive"
 
 
 def activate_box(boxes, x, y, x_size, y_size):
