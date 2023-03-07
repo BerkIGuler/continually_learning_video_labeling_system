@@ -3,11 +3,13 @@ import os
 import cv2
 from loguru import logger
 
-import helpers
-from helpers import BBox
 import cfg
 import asone
 from asone import ASOne
+
+from anno import (select_class_by_keyboard, init_boxes, init_frame,
+                  BBox, to_ordered_xyxy, activate_box,
+                  modify_active_box, xyxy_to_yolo)
 
 
 display_frame = None
@@ -43,9 +45,9 @@ def mouse_click(event, x, y, flags, param):
         pressed = False
         # Get the class id with keyboard
         key = cv2.waitKey(0) & 0xFF
-        selected_class_id = helpers.select_class_by_keyboard(key)
+        selected_class_id = select_class_by_keyboard(key)
         current_box = BBox(
-            coords=helpers.to_ordered_xyxy(ix, iy, x, y),
+            coords=to_ordered_xyxy(ix, iy, x, y),
             color=cfg.id_to_color[selected_class_id],
             class_id=selected_class_id,
             frame_width=cfg.config["X_SIZE"],
@@ -54,25 +56,25 @@ def mouse_click(event, x, y, flags, param):
         boxes.append(current_box)
         # Draw bounding box
         display_frame = copy.deepcopy(empty_frame)
-        helpers.init_frame(display_frame, boxes)
+        init_frame(display_frame, boxes)
         cv2.imshow("window", display_frame)
 
     elif event == cv2.EVENT_RBUTTONDOWN:
-        delete_bbox = helpers.activate_box(boxes, x, y, cfg.config["X_SIZE"], cfg.config["Y_SIZE"])
+        delete_bbox = activate_box(boxes, x, y, cfg.config["X_SIZE"], cfg.config["Y_SIZE"])
         display_frame = copy.deepcopy(empty_frame)
-        helpers.init_frame(display_frame, boxes)
+        init_frame(display_frame, boxes)
         cv2.imshow("window", display_frame)
         if delete_bbox:
-            helpers.modify_active_box(
+            modify_active_box(
                 boxes, task="delete")
         else:
             key = cv2.waitKey(0) & 0xFF
-            selected_class_id = helpers.select_class_by_keyboard(key)
-            helpers.modify_active_box(
+            selected_class_id = select_class_by_keyboard(key)
+            modify_active_box(
                 boxes, task="update_label",
                 new_class_id=selected_class_id)
         display_frame = copy.deepcopy(empty_frame)
-        helpers.init_frame(display_frame, boxes)
+        init_frame(display_frame, boxes)
         cv2.imshow("window", display_frame)
 
 
@@ -86,7 +88,7 @@ def update_labels(vid_name, frame_num, annotated: bool):
     with open(f"{labels_dir}/{vid_name}_{frame_num}.txt", "w") as fp:
         file_content = []
         for i, box in enumerate(boxes):
-            file_content.append(helpers.xyxy_to_yolo(box))
+            file_content.append(xyxy_to_yolo(box))
         fp.write("\n".join(file_content))
 
     # Make bboxes ready for next annotations
@@ -135,12 +137,12 @@ def annotate(video_path):
             cv2.imwrite(f"{frames_path}/{video_name}_{frame_num}.jpg", display_frame)
 
         original_height, original_width = display_frame.shape[:2]
-        boxes = helpers.init_boxes(
+        boxes = init_boxes(
             bboxes, class_ids, track_ids,
             original_width, original_height)
         display_frame = cv2.resize(display_frame, (x_size_window, y_size_window))
         empty_frame = copy.deepcopy(display_frame)
-        helpers.init_frame(display_frame, boxes)
+        init_frame(display_frame, boxes)
 
         # display yolo detections
         cv2.imshow("window", display_frame)

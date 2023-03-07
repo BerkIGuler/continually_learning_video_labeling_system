@@ -14,7 +14,7 @@ def get_distinct_colors(n):
     return cols
 
 
-colors = get_distinct_colors(80)
+colors = get_distinct_colors(48)
 
 for i, color in enumerate(colors):
     print(f"{i}: {color}")
