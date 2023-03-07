@@ -5,6 +5,7 @@ import numpy as np
 import os
 import time
 
+import asone
 import asone.utils as utils
 from asone.trackers import Tracker
 from asone.detectors import Detector
@@ -137,9 +138,9 @@ class ASOne:
         tic = time.time()
         while True:
             key = cv2.waitKey(1) & 0xFF
-            if key == ord('q'):
+            if key == asone.ESC_KEY:
                 break
-            elif key == ord('a'):
+            elif key == asone.SPACE_KEY:
                 yield "", "", "annotation"
 
             start_time = time.time()

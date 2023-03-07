@@ -2,6 +2,10 @@ from .asone import ASOne
 import asone.detectors
 import asone.trackers
 
+
+ESC_KEY = 27
+SPACE_KEY = 32
+
 BYTETRACK = 0
 DEEPSORT = 1
 NORFAIR = 2
