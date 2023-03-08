@@ -136,27 +136,24 @@ def annotate(video_path=None, is_real_time=False):
             cv2.setMouseCallback('window', mouse_click)
             logger.info("Annotation Mode opened, video paused!")
             key = cv2.waitKey(0) & 0xFF  # stop the video
-            while key != 27:  # press ESC to quit anno mode
+            while key != asone.ESC_KEY:  # press ESC to quit anno mode
                 key = cv2.waitKey(0) & 0xFF
             # deactivate mouse event trigger
             cv2.setMouseCallback('window', lambda *args: None)
 
             if len(boxes) != 0:
-                if is_real_time:
-                    if cfg.config["SAVE_EDITED_FRAMES"]:
-                        cv2.imwrite(f"{anno_frames_dir}/real_time_vid_{frame_num}.jpg", display_frame)
-                        update_labels(frame_num=frame_num, annotated=True, is_real_time=True)
-                else:
-                    if cfg.config["SAVE_EDITED_FRAMES"]:
-                        cv2.imwrite(f"{anno_frames_dir}/{video_name}_{frame_num}.jpg", display_frame)
-                        update_labels(vid_name=video_name, frame_num=frame_num, annotated=True)
+                if is_real_time and cfg.config["SAVE_EDITED_FRAMES"]:
+                    cv2.imwrite(f"{anno_frames_dir}/real_time_vid_{frame_num}.jpg", display_frame)
+                    update_labels(frame_num=frame_num, annotated=True, is_real_time=True)
+                elif cfg.config["SAVE_EDITED_FRAMES"]:
+                    cv2.imwrite(f"{anno_frames_dir}/{video_name}_{frame_num}.jpg", display_frame)
+                    update_labels(vid_name=video_name, frame_num=frame_num, annotated=True)
             continue
-        if is_real_time:
-            if cfg.config["SAVE_RAW"]:
-                cv2.imwrite(f"{frames_path}/real_time_vid_{frame_num}.jpg", display_frame)
-        else:
-            if cfg.config["SAVE_RAW"]:
-                cv2.imwrite(f"{frames_path}/{video_name}_{frame_num}.jpg", display_frame)
+
+        if is_real_time and cfg.config["SAVE_RAW"]:
+            cv2.imwrite(f"{frames_path}/real_time_vid_{frame_num}.jpg", display_frame)
+        elif cfg.config["SAVE_RAW"]:
+            cv2.imwrite(f"{frames_path}/{video_name}_{frame_num}.jpg", display_frame)
 
         original_height, original_width = display_frame.shape[:2]
         boxes = init_boxes(
@@ -168,11 +165,9 @@ def annotate(video_path=None, is_real_time=False):
 
         # display yolo detections
         cv2.imshow("window", display_frame)
-        if is_real_time:
-            if cfg.config["SAVE_RAW"]:
-                cv2.imwrite(f"{frames_path}/real_time_vid_{frame_num}.jpg", display_frame)
-        else:
-            if cfg.config["SAVE_NON_EDITED_FRAMES"]:
-                update_labels(vid_name=video_name, frame_num=frame_num, annotated=False)
+        if is_real_time and cfg.config["SAVE_RAW"]:
+            cv2.imwrite(f"{frames_path}/real_time_vid_{frame_num}.jpg", display_frame)
+        elif cfg.config["SAVE_NON_EDITED_FRAMES"]:
+            update_labels(vid_name=video_name, frame_num=frame_num, annotated=False)
 
     cv2.destroyAllWindows()
