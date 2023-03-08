@@ -5,11 +5,10 @@ from loguru import logger
 
 import cfg
 import asone
-from asone import ASOne
 
-from anno import (select_class_by_keyboard, init_boxes, init_frame,
-                  BBox, to_ordered_xyxy, activate_box,
-                  modify_active_box, xyxy_to_yolo)
+from anno import (select_class_by_keyboard, init_boxes, init_frame, show_frame,
+                  BBox, to_ordered_xyxy, activate_box, modify_active_box,
+                  xyxy_to_yolo, setup_tracker)
 
 
 display_frame = None
@@ -17,29 +16,30 @@ ix, iy = 0, 0
 boxes = []
 
 pressed = False
+waiting_key = False
 frame_cache = None
 empty_frame = None
-
-dt_obj = ASOne(
-    tracker=asone.DEEPSORT,
-    detector=asone.YOLOV7_PYTORCH,
-    use_cuda=True)
 
 
 def mouse_click(event, x, y, flags, param):
     global boxes, display_frame, ix, iy, \
-        pressed, frame_cache, empty_frame
+        pressed, frame_cache, empty_frame, \
+        waiting_key
 
     if event == cv2.EVENT_LBUTTONDOWN:
         ix, iy = x, y
         pressed = True
         # copy frame
-        frame_cache = copy.deepcopy(display_frame)
+        boxed_frame = copy.deepcopy(empty_frame)
+        init_frame(boxed_frame, boxes)
+        frame_cache = copy.deepcopy(boxed_frame)
 
     elif pressed and event == cv2.EVENT_MOUSEMOVE:
         cv2.rectangle(frame_cache, (ix, iy), (x, y), (0, 0, 255), 1)
-        cv2.imshow("window", frame_cache)
-        frame_cache = copy.deepcopy(display_frame)
+        show_frame(frame_cache, "window", mode="annotate")
+        boxed_frame = copy.deepcopy(empty_frame)
+        init_frame(boxed_frame, boxes)
+        frame_cache = copy.deepcopy(boxed_frame)
 
     elif event == cv2.EVENT_LBUTTONUP:
         pressed = False
@@ -57,25 +57,28 @@ def mouse_click(event, x, y, flags, param):
         # Draw bounding box
         display_frame = copy.deepcopy(empty_frame)
         init_frame(display_frame, boxes)
-        cv2.imshow("window", display_frame)
+        show_frame(display_frame, "window", mode="annotate")
 
     elif event == cv2.EVENT_RBUTTONDOWN:
         delete_bbox = activate_box(boxes, x, y, cfg.config["X_SIZE"], cfg.config["Y_SIZE"])
         display_frame = copy.deepcopy(empty_frame)
         init_frame(display_frame, boxes)
-        cv2.imshow("window", display_frame)
+        show_frame(display_frame, "window", mode="annotate")
         if delete_bbox:
             modify_active_box(
                 boxes, task="delete")
-        else:
+        elif not waiting_key:
+            waiting_key = True
             key = cv2.waitKey(0) & 0xFF
+            waiting_key = False
             selected_class_id = select_class_by_keyboard(key)
-            modify_active_box(
-                boxes, task="update_label",
-                new_class_id=selected_class_id)
+            if selected_class_id:
+                modify_active_box(
+                    boxes, task="update_label",
+                    new_class_id=selected_class_id)
         display_frame = copy.deepcopy(empty_frame)
         init_frame(display_frame, boxes)
-        cv2.imshow("window", display_frame)
+        show_frame(display_frame, "window", mode="annotate")
 
 
 def update_labels(frame_num, annotated: bool, vid_name=None, is_real_time=False, **kwargs):
@@ -109,29 +112,19 @@ def annotate(video_path=None, is_real_time=False):
     anno_frames_dir = cfg.config["ANNOTATED_FRAMES_DIR"]
     x_size_window = cfg.config["X_SIZE"]
     y_size_window = cfg.config["Y_SIZE"]
+
     if not is_real_time:
         video_name = os.path.basename(video_path).split(".")[0]
 
     cv2.namedWindow("window", cv2.WINDOW_GUI_NORMAL)
     cv2.resizeWindow("window", x_size_window, y_size_window)
 
-    if is_real_time:
-        # tracking function
-        track_fn = dt_obj.track_webcam(
-            0, output_dir="./temp", save_result=cfg.config["SAVE_ORIGINAL"],
-            display=cfg.config["DISPLAY_ORIGINAL"],
-            filter_classes=cfg.config["FILTERED_CLASSES"])
-    else:
-        # tracking function
-        track_fn = dt_obj.track_video(
-            video_path, output_dir="./temp", save_result=cfg.config["SAVE_ORIGINAL"],
-            display=cfg.config["DISPLAY_ORIGINAL"],
-            filter_classes=cfg.config["FILTERED_CLASSES"])
+    track_fn = setup_tracker(real_time=is_real_time, video_path=video_path)
 
     for bbox_details, frame_details, action in track_fn:
         if action == "stream":
             bboxes, track_ids, _, class_ids = bbox_details
-            display_frame, frame_num, _ = frame_details
+            display_frame, frame_id, frame_count, fps = frame_details
         elif action == "annotation":
             cv2.setMouseCallback('window', mouse_click)
             logger.info("Annotation Mode opened, video paused!")
@@ -143,17 +136,17 @@ def annotate(video_path=None, is_real_time=False):
 
             if len(boxes) != 0:
                 if is_real_time and cfg.config["SAVE_EDITED_FRAMES"]:
-                    cv2.imwrite(f"{anno_frames_dir}/real_time_vid_{frame_num}.jpg", display_frame)
-                    update_labels(frame_num=frame_num, annotated=True, is_real_time=True)
+                    cv2.imwrite(f"{anno_frames_dir}/real_time_vid_{frame_id}.jpg", display_frame)
+                    update_labels(frame_num=frame_id, annotated=True, is_real_time=True)
                 elif cfg.config["SAVE_EDITED_FRAMES"]:
-                    cv2.imwrite(f"{anno_frames_dir}/{video_name}_{frame_num}.jpg", display_frame)
-                    update_labels(vid_name=video_name, frame_num=frame_num, annotated=True)
+                    cv2.imwrite(f"{anno_frames_dir}/{video_name}_{frame_id}.jpg", display_frame)
+                    update_labels(vid_name=video_name, frame_num=frame_id, annotated=True)
             continue
 
         if is_real_time and cfg.config["SAVE_RAW"]:
-            cv2.imwrite(f"{frames_path}/real_time_vid_{frame_num}.jpg", display_frame)
+            cv2.imwrite(f"{frames_path}/real_time_vid_{frame_id}.jpg", display_frame)
         elif cfg.config["SAVE_RAW"]:
-            cv2.imwrite(f"{frames_path}/{video_name}_{frame_num}.jpg", display_frame)
+            cv2.imwrite(f"{frames_path}/{video_name}_{frame_id}.jpg", display_frame)
 
         original_height, original_width = display_frame.shape[:2]
         boxes = init_boxes(
@@ -163,11 +156,10 @@ def annotate(video_path=None, is_real_time=False):
         empty_frame = copy.deepcopy(display_frame)
         init_frame(display_frame, boxes)
 
-        # display yolo detections
-        cv2.imshow("window", display_frame)
+        show_frame(display_frame, "window", fps, frame_id, frame_count)
         if is_real_time and cfg.config["SAVE_RAW"]:
-            cv2.imwrite(f"{frames_path}/real_time_vid_{frame_num}.jpg", display_frame)
+            cv2.imwrite(f"{frames_path}/real_time_vid_{frame_id}.jpg", display_frame)
         elif cfg.config["SAVE_NON_EDITED_FRAMES"]:
-            update_labels(vid_name=video_name, frame_num=frame_num, annotated=False)
+            update_labels(vid_name=video_name, frame_num=frame_id, annotated=False)
 
     cv2.destroyAllWindows()

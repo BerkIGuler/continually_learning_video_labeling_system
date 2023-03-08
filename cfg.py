@@ -38,11 +38,13 @@ def init_config():
     cwd = os.getcwd()
     config_dir = os.path.join(cwd, "config_files")
 
-    colors_path = os.path.join(config_dir, "color_list.yaml")
-    class_path = os.path.join(config_dir, "class_list.yaml")
     config_path = os.path.join(config_dir, "config.yaml")
-    key_to_class_path = os.path.join(config_dir, "key_to_class_w32.yaml")
-    # Line 44 is changed because of incompatibility in windows
+    with open(config_path, "r") as f_in:
+        config = init_yaml_config(yaml.safe_load(f_in))
+
+    colors_path = os.path.join(config_dir, config["ID_TO_COLOR_CFG"])
+    class_path = os.path.join(config_dir, config["ID_TO_CLASS_CFG"])
+    key_to_class_path = os.path.join(config_dir, config["KEY_TO_CLASS_CFG"])
 
     with open(colors_path, "r") as f_in:
         id_to_color = init_yaml_color_list(yaml.safe_load(f_in))
@@ -52,9 +54,6 @@ def init_config():
 
     with open(key_to_class_path, "r") as f_in:
         key_to_class = init_key_to_class(yaml.safe_load(f_in))
-
-    with open(config_path, "r") as f_in:
-        config = init_yaml_config(yaml.safe_load(f_in))
 
     os.makedirs(config["FRAMES_DIR"], exist_ok=True)
     os.makedirs(config["LABELS_DIR"], exist_ok=True)

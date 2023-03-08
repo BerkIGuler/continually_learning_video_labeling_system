@@ -151,10 +151,10 @@ class ASOne:
                 frame, config)
             elapsed_time = time.time() - start_time
             fps = 1 / elapsed_time
-            logger.info(
-                f"fps: {fps:.2f} frame: {frame_id}/{int(frame_count)}" +
-                f"({elapsed_time * 1000:.2f} ms)"
-            )
+            # logger.info(
+            #     f"fps: {fps:.2f} frame: {frame_id}/{int(frame_count)}" +
+            #     f"({elapsed_time * 1000:.2f} ms)"
+            # )
             if display or save_result:
                 im0 = copy.deepcopy(frame)
                 cv2.line(im0, (20, 25), (127, 25), [85, 45, 255], 30)
@@ -172,6 +172,6 @@ class ASOne:
                 video_writer.write(im0)
             frame_id += 1
             # yeild required values in form of (bbox_details, frames_details)
-            yield (bboxes_xyxy, ids, scores, class_ids), (im0 if display else frame, frame_id-1, fps), "stream"
+            yield (bboxes_xyxy, ids, scores, class_ids), (im0 if display else frame, frame_id-1, frame_count, fps), "stream"
         tac = time.time()
         logger.info(f'Total Time Taken: {tac - tic:.2f}')

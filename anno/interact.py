@@ -1,3 +1,4 @@
+import asone
 import cfg
 
 
@@ -8,5 +9,6 @@ def select_class_by_keyboard(key):
         class_name = cfg.key_to_class[key]
         selected_class_id = class_to_id[class_name]
         return selected_class_id
-    except KeyError as e:
-        print("undefined class", e)
+    except KeyError:
+        if key == asone.ESC_KEY:
+            return None
