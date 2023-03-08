@@ -1,0 +1,45 @@
+# initials
+a: apartment
+b: bus
+c: car
+d: dog
+f: forest
+g: goat
+h: house
+m: motorcycle
+p: person
+s: skytower
+t: tree
+u: umbrella
+v: van
+y: yacht
+
+# others
+q: mosque
+e: bridge
+i: field
+j: suitcase
+k: handbag
+l: ambulance
+n: train
+o: cow
+r: horse
+w: highway
+x: antenna_tower
+z: cat
+
+# numerals
+1: truck
+2: bird
+3: cottage
+4: airplane
+5: bench
+6: bicycle
+7: cloud
+8: helicopter
+9: traffic_sign
+0: traffic_light
+
+# punctuation
+.: stadium
+
