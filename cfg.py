@@ -41,7 +41,8 @@ def init_config():
     colors_path = os.path.join(config_dir, "color_list.yaml")
     class_path = os.path.join(config_dir, "class_list.yaml")
     config_path = os.path.join(config_dir, "config.yaml")
-    key_to_class_path = os.path.join(config_dir, "key_to_class.yaml")
+    key_to_class_path = os.path.join(config_dir, "key_to_class_w32.yaml")
+    # Line 44 is changed because of incompatibility in windows
 
     with open(colors_path, "r") as f_in:
         id_to_color = init_yaml_color_list(yaml.safe_load(f_in))
