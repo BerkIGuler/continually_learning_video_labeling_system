@@ -19,6 +19,5 @@ ID_TO_CLASS_CFG: class_list.yaml
 ID_TO_COLOR_CFG: color_list.yaml
 KEY_TO_CLASS_CFG: key_to_class.yaml
 
-
 X_SIZE: 1920
 Y_SIZE: 1080
