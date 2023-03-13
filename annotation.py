@@ -6,7 +6,7 @@ from loguru import logger
 import cfg
 import asone
 
-from anno import (select_class_by_keyboard, select_class_by_voice, init_boxes, init_frame, show_frame,
+from anno import (select_class_by_keyboard, init_boxes, init_frame, show_frame,
                   BBox, to_ordered_xyxy, activate_box, modify_active_box,
                   xyxy_to_yolo, setup_tracker, get_cursor_to_abox_status)
 
