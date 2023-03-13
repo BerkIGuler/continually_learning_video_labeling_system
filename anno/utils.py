@@ -90,3 +90,29 @@ def in_box(norm_x, norm_y, xc, yc, w, h):
         status = False
 
     return status
+
+
+def get_xy_to_box_position(box, x, y, error_margin=7):
+    x1, y1, x2, y2 = box.coords
+    if (x1 + error_margin) < x < (x2 - error_margin) and abs(y - y1) < error_margin:
+        pos = "up"
+    elif (x1 + error_margin) < x < (x2 - error_margin) and abs(y - y2) < error_margin:
+        pos = "down"
+    elif (y1 + error_margin) < y < (y2 - error_margin) and abs(x - x1) < error_margin:
+        pos = "left"
+    elif (y1 + error_margin) < y < (y2 - error_margin) and abs(x - x2) < error_margin:
+        pos = "right"
+    elif abs(x - x1) < error_margin and abs(y - y1) < error_margin:
+        pos = "upper_left"
+    elif abs(x - x2) < error_margin and abs(y - y1) < error_margin:
+        pos = "upper_right"
+    elif abs(x - x1) < error_margin and abs(y - y2) < error_margin:
+        pos = "down_left"
+    elif abs(x - x2) < error_margin and abs(y - y2) < error_margin:
+        pos = "down_right"
+    elif (x1 + error_margin) < x < (x2 - error_margin) and \
+            (y1 + error_margin) < y < (y2 - error_margin):
+        pos = "mid"
+    else:
+        pos = None
+    return pos
