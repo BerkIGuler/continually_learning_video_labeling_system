@@ -98,12 +98,7 @@ def mouse_click(event, x, y, flags, param):
             waiting_key = True
             key = cv2.waitKey(0) & 0xFF
             waiting_key = False
-            if key == 13:  # space tuşuna basıp bırakınca voice module active
-                selected_class_id = select_class_by_voice(key)
-                if selected_class_id is None:
-                    selected_class_id = select_class_by_keyboard(key)
-            else:  # voice yoksa keyboard devam
-                selected_class_id = select_class_by_keyboard(key)
+            selected_class_id = select_class_by_keyboard(key)
             if selected_class_id:
                 modify_active_box(
                     boxes, task="update_label",
