@@ -1,7 +1,7 @@
 import math
 
 import cfg
-from anno.utils import xyxy_to_yolo, in_box
+from anno.utils import xyxy_to_yolo, in_box, get_xy_to_box_position
 import anno
 
 
@@ -68,6 +68,36 @@ class BBox:
         self.frame_width = new_frame_w
         self.frame_height = new_frame_h
 
+    def get_scaled_coords(self, scaling_side, x, y, ix=None, iy=None):
+        x1, y1, x2, y2 = self.coords
+        if scaling_side == "up":
+            new_coords = x1, y, x2, y2
+        elif scaling_side == "down":
+            new_coords = x1, y1, x2, y
+        elif scaling_side == "left":
+            new_coords = x, y1, x2, y2
+        elif scaling_side == "right":
+            new_coords = x1, y1, x, y2
+        elif scaling_side == "upper_left":
+            new_coords = x, y, x2, y2
+        elif scaling_side == "upper_right":
+            new_coords = x1, y, x, y2
+        elif scaling_side == "down_left":
+            new_coords = x, y1, x2, y
+        elif scaling_side == "down_right":
+            new_coords = x1, y1, x, y
+        elif scaling_side == "mid":
+            x_translation = x - ix
+            y_translation = y - iy
+            new_coords = (x1 + x_translation,
+                          y1 + y_translation,
+                          x2 + x_translation,
+                          y2 + y_translation)
+        else:
+            raise ValueError("invalid scaling side arg")
+
+        return new_coords
+
     def __repr__(self):
         """
         String representation of the BBox object.
@@ -126,6 +156,18 @@ def modify_active_box(boxes, task="delete", new_class_id=None):
             else:
                 raise ValueError("task must be either 'delete' or 'update_label'")
             box.state = "passive"
+
+
+def get_cursor_to_abox_status(x, y, boxes):
+    a_box_inds = [box_idx for box_idx in range(len(boxes)) if boxes[box_idx].state == "active"]
+    assert len(a_box_inds) < 2, "there must be one active box at most"
+    if a_box_inds:
+        a_box_idx = a_box_inds[0]
+        a_box = boxes[a_box_idx]
+        pos = get_xy_to_box_position(a_box, x, y)
+        return a_box, pos
+    else:
+        return None, None
 
 
 def activate_box(boxes, x, y, x_size, y_size):

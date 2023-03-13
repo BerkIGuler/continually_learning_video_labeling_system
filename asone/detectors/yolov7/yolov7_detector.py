@@ -51,7 +51,7 @@ class YOLOv7Detector:
 
     def detect(self, image: list,
                input_shape: tuple = (640, 640),
-               conf_thres: float = 0.25,
+               conf_thres: float = 0.01,
                iou_thres: float = 0.45,
                max_det: int = 1000,
                filter_classes: bool = None,

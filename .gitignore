@@ -6,3 +6,6 @@
 *.t7
 # pycharm project folder
 .idea/
+
+data/
+videos/

@@ -13,10 +13,10 @@ DISPLAY_ORIGINAL: False
 SAVE_EDITED_FRAMES: False
 SAVE_NON_EDITED_FRAMES: False
 
-REAL_TIME: True
+REAL_TIME: False
 
-ID_TO_CLASS_CFG: temp_class_list.yaml
-ID_TO_COLOR_CFG: temp_color_list.yaml
+ID_TO_CLASS_CFG: class_list.yaml
+ID_TO_COLOR_CFG: color_list.yaml
 KEY_TO_CLASS_CFG: key_to_class.yaml
 
 

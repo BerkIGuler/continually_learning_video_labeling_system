@@ -27,4 +27,4 @@ def setup_detector():
         tracker=asone.DEEPSORT,
         detector=asone.YOLOV7_PYTORCH,
         use_cuda=True)
-    return  detector
+    return detector

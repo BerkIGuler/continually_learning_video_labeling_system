@@ -8,7 +8,7 @@ def main():
     sample_video_path = os.path.join(cfg.config["VIDEO_DIR"], "test_vid.mp4")
 
     if cfg.config["REAL_TIME"]:
-        annotation.annotate(is_real_time=cfg.config["REAL_TIME"])
+        annotation.annotate()
     else:
         annotation.annotate(video_path=sample_video_path)
 
