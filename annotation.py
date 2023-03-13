@@ -6,7 +6,7 @@ from loguru import logger
 import cfg
 import asone
 
-from anno import (select_class_by_keyboard, init_boxes, init_frame, show_frame,
+from anno import (select_class_by_keyboard, select_class_by_voice, init_boxes, init_frame, show_frame,
                   BBox, to_ordered_xyxy, activate_box, modify_active_box,
                   xyxy_to_yolo, setup_tracker)
 
@@ -45,7 +45,12 @@ def mouse_click(event, x, y, flags, param):
         pressed = False
         # Get the class id with keyboard
         key = cv2.waitKey(0) & 0xFF
-        selected_class_id = select_class_by_keyboard(key)
+        if key == 13:  # space tuşuna basıp bırakınca voice module active
+            selected_class_id = select_class_by_voice(key)
+            if selected_class_id is None:
+                selected_class_id = select_class_by_keyboard(key)
+        else:  # voice yoksa keyboard devam
+            selected_class_id = select_class_by_keyboard(key)
         current_box = BBox(
             coords=to_ordered_xyxy(ix, iy, x, y),
             color=cfg.id_to_color[selected_class_id],
@@ -71,7 +76,12 @@ def mouse_click(event, x, y, flags, param):
             waiting_key = True
             key = cv2.waitKey(0) & 0xFF
             waiting_key = False
-            selected_class_id = select_class_by_keyboard(key)
+            if key == 13:  # space tuşuna basıp bırakınca voice module active
+                selected_class_id = select_class_by_voice(key)
+                if selected_class_id is None:
+                    selected_class_id = select_class_by_keyboard(key)
+            else:  # voice yoksa keyboard devam
+                selected_class_id = select_class_by_keyboard(key)
             if selected_class_id:
                 modify_active_box(
                     boxes, task="update_label",
