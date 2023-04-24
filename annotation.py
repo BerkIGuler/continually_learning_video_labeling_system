@@ -2,6 +2,7 @@ import copy
 import os
 import cv2
 from loguru import logger
+import threading
 
 import cfg
 import asone
@@ -9,6 +10,8 @@ import asone
 from anno import (select_class_by_keyboard, init_boxes, init_frame, show_frame,
                   BBox, to_ordered_xyxy, activate_box, modify_active_box,
                   xyxy_to_yolo, setup_tracker, get_cursor_to_abox_status)
+
+from network.client import TCPClient, threaded_send
 
 
 display_frame = None
@@ -22,6 +25,8 @@ empty_frame = None
 
 cursor_to_a_box_pos = None
 a_box = None
+
+th = threading.Thread(target=threaded_send, args=cfg.config)
 
 
 def mouse_click(event, x, y, flags, param):
@@ -103,6 +108,7 @@ def mouse_click(event, x, y, flags, param):
                 modify_active_box(
                     boxes, task="update_label",
                     new_class_id=selected_class_id)
+
         display_frame = copy.deepcopy(empty_frame)
         init_frame(display_frame, boxes)
         show_frame(display_frame, "window", mode="annotate")
@@ -143,6 +149,8 @@ def annotate(video_path=None):
 
     if not real_time:
         video_name = os.path.basename(video_path).split(".")[0]
+    else:
+        video_name = "real_time"
 
     cv2.namedWindow("window", cv2.WINDOW_GUI_NORMAL)
     cv2.resizeWindow("window", x_size_window, y_size_window)
@@ -170,6 +178,15 @@ def annotate(video_path=None):
                     cv2.imwrite(f"{anno_frames_dir}/{video_name}_{frame_id}.jpg", display_frame)
                     update_labels(vid_name=video_name, frame_num=frame_id, annotated=True)
             continue
+        elif action == "send":
+            logger.info('Entered send mode')
+            client = TCPClient(cfg.config['HOST'], cfg.config['PORT'])
+            client.send(cfg.config['FOLDER_SENT'])
+            # client.receive('./received')
+        elif action == 'receive':
+            logger.info('Entered receive mode')
+            client = TCPClient(cfg.config['HOST'], cfg.config['PORT'])
+            client.receive(cfg.config['FOLDER_SENT'])
 
         if real_time and cfg.config["SAVE_RAW"]:
             cv2.imwrite(f"{frames_path}/real_time_vid_{frame_id}.jpg", display_frame)

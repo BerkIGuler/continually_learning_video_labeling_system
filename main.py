@@ -5,7 +5,7 @@ import annotation
 
 def main():
     cfg.init_config()
-    sample_video_path = os.path.join(cfg.config["VIDEO_DIR"], "test_vid.mp4")
+    sample_video_path = os.path.join(cfg.config["VIDEO_DIR"], "test_vid_2.mp4")
 
     if cfg.config["REAL_TIME"]:
         annotation.annotate()

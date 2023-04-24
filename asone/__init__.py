@@ -5,6 +5,8 @@ import asone.trackers
 
 ESC_KEY = 27
 SPACE_KEY = 32
+ENTER_KEY = 13
+BACKSPACE_KEY = 8
 
 BYTETRACK = 0
 DEEPSORT = 1

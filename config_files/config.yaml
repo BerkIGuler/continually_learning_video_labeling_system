@@ -10,14 +10,19 @@ FILTERED_CLASSES: None
 SAVE_RAW: False  # if True save raw frames
 SAVE_ORIGINAL: False  # if True saves tracker+detection outputs as a seperate video
 DISPLAY_ORIGINAL: False
-SAVE_EDITED_FRAMES: False
-SAVE_NON_EDITED_FRAMES: False
+SAVE_EDITED_FRAMES: True
+SAVE_NON_EDITED_FRAMES: True
 
-REAL_TIME: False
+REAL_TIME: True
 
 ID_TO_CLASS_CFG: class_list.yaml
 ID_TO_COLOR_CFG: color_list.yaml
-KEY_TO_CLASS_CFG: key_to_class.yaml
+KEY_TO_CLASS_CFG: key_to_class_w32.yaml
 
-X_SIZE: 1920
-Y_SIZE: 1080
+X_SIZE: 1080
+Y_SIZE: 720
+
+# network
+HOST: '169.254.153.152'
+PORT: 65432
+FOLDER_SENT: ./data

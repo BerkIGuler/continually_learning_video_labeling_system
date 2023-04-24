@@ -142,6 +142,10 @@ class ASOne:
                 break
             elif key == asone.SPACE_KEY:
                 yield "", "", "annotation"
+            elif key == asone.ENTER_KEY:
+                yield "", "", "send"
+            elif key == asone.BACKSPACE_KEY:
+                yield "", "", "receive"
 
             start_time = time.time()
             ret, frame = cap.read()
