@@ -159,8 +159,18 @@ def modify_active_box(boxes, task="delete", new_class_id=None):
 
 
 def get_cursor_to_abox_status(x, y, boxes):
+    """gets cursor's position wrt the current active box
+
+    Args:
+        x (float): The x-coordinate of the cursor.
+        y (float): The y-coordinate of the cursor.
+        boxes (list): List of box objects
+
+    Returns:
+        Two-tuple of the active box object and string position
+    """
     a_box_inds = [box_idx for box_idx in range(len(boxes)) if boxes[box_idx].state == "active"]
-    assert len(a_box_inds) < 2, "there must be one active box at most"
+    assert len(a_box_inds) < 2, "there must be one active box at most at a time"
     if a_box_inds:
         a_box_idx = a_box_inds[0]
         a_box = boxes[a_box_idx]
@@ -188,25 +198,31 @@ def activate_box(boxes, x, y, x_size, y_size):
         y_size (float): The size of the y-dimension of the coordinate system.
 
     Returns:
-        None
+        str: action to be taken
     """
     norm_x, norm_y = x / x_size, y / y_size
     closest_dist = anno.MAX_DISTANCE
-    candidate_box_id = None
-    already_active_id = None
+    closest_box_id = -1
+    already_active_id = -1
     for i, box in enumerate(boxes):
         c_id, xc, yc, w, h = xyxy_to_yolo(box, return_type="tuple")
-        euc_dist = math.sqrt((xc - norm_x) ** 2 + (yc - norm_y) ** 2)
         if box.state == "active":
             already_active_id = i
-        if euc_dist < closest_dist and in_box(norm_x, norm_y, xc, yc, w, h):
-            closest_dist = euc_dist
-            candidate_box_id = i
+        # if the cursor in the current box
+        if in_box(norm_x, norm_y, xc, yc, w, h):
+            euc_dist = math.sqrt((xc - norm_x) ** 2 + (yc - norm_y) ** 2)
+            if euc_dist < closest_dist:
+                closest_dist = euc_dist
+                closest_box_id = i
+
+    for i, box in enumerate(boxes):
+        if i == closest_box_id:
             box.state = "active"
+        else:
+            box.state = "passive"
 
-    if candidate_box_id is not None:
-        for i, box in enumerate(boxes):
-            if i != candidate_box_id and box.state == "active":
-                box.state = "passive"
-
-    return already_active_id == candidate_box_id
+    if already_active_id == closest_box_id and already_active_id != -1:
+        action = "delete"
+    else:
+        action = "wait_key"
+    return action

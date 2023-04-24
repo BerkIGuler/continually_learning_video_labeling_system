@@ -13,11 +13,11 @@ DISPLAY_ORIGINAL: False
 SAVE_EDITED_FRAMES: True
 SAVE_NON_EDITED_FRAMES: True
 
-REAL_TIME: True
+REAL_TIME: False
 
 ID_TO_CLASS_CFG: class_list.yaml
 ID_TO_COLOR_CFG: color_list.yaml
-KEY_TO_CLASS_CFG: key_to_class_w32.yaml
+KEY_TO_CLASS_CFG: key_to_class.yaml
 
 X_SIZE: 1080
 Y_SIZE: 720
