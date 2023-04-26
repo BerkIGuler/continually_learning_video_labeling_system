@@ -4,7 +4,8 @@
 *.pt
 *.pth
 *.t7
+*.zip
 # pycharm project folder
 .idea/
-
+send_data/
 data/

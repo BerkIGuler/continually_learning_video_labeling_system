@@ -11,7 +11,7 @@ import asone
 import anno
 from anno import (select_class_by_keyboard, init_boxes, init_frame, show_frame,
                   BBox, to_ordered_xyxy, activate_box, modify_active_box,
-                  setup_tracker, get_cursor_to_abox_status)
+                  setup_tracker, get_cursor_to_abox_status, interact)
 
 from network.client import TCPClient
 
@@ -203,6 +203,9 @@ def annotate(video_path=None):
             logger.info('Entered receive mode')
             client = TCPClient(cfg.config['HOST'], cfg.config['PORT'])
             client.receive(cfg.config['FOLDER_SENT'])
+
+            anno.interact.update_weights()
+            break
 
         original_height, original_width = display_frame.shape[:2]
         boxes = init_boxes(
