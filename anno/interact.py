@@ -10,5 +10,4 @@ def select_class_by_keyboard(key):
         selected_class_id = class_to_id[class_name]
         return selected_class_id
     except KeyError:
-        if key == asone.ESC_KEY:
-            return None
+        return None

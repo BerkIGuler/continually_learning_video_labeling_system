@@ -1,8 +1,8 @@
 import copy
 import os
 import cv2
+import numpy as np
 from loguru import logger
-import threading
 
 import cfg
 import asone
@@ -11,22 +11,23 @@ from anno import (select_class_by_keyboard, init_boxes, init_frame, show_frame,
                   BBox, to_ordered_xyxy, activate_box, modify_active_box,
                   xyxy_to_yolo, setup_tracker, get_cursor_to_abox_status)
 
-from network.client import TCPClient, threaded_send
+from network.client import TCPClient
 
+# global array shared and displayed by the functions
+display_frame = np.array([])
+ix, iy = 0, 0  # initial cursor point when mouse left-clicked
+boxes = []  # store all box object belonging to current frame
 
-display_frame = None
-ix, iy = 0, 0
-boxes = []
-
-pressed = False
+pressed = False  # if left mouse click pressed
+# flag to raise when the program waits for a keyboard event
 waiting_key = False
-frame_cache = None
-empty_frame = None
+frame_cache = None  # used to store a frame array
+empty_frame = np.array([])  # empty frame does not contain any boxes drawn
 
+# to keep where the cursor lies wrt to active box
 cursor_to_a_box_pos = None
+# to store active box
 a_box = None
-
-th = threading.Thread(target=threaded_send, args=cfg.config)
 
 
 def mouse_click(event, x, y, flags, param):
@@ -38,6 +39,8 @@ def mouse_click(event, x, y, flags, param):
         pressed = True
         boxed_frame = copy.deepcopy(empty_frame)
         a_box, cursor_to_a_box_pos = get_cursor_to_abox_status(x, y, boxes)
+        # if cursor_to_a_box_pos is None,
+        # there is not any active box yet
         if not cursor_to_a_box_pos:
             ix, iy = x, y
         elif cursor_to_a_box_pos == "mid":
@@ -92,22 +95,25 @@ def mouse_click(event, x, y, flags, param):
         show_frame(display_frame, "window", mode="annotate")
 
     elif event == cv2.EVENT_RBUTTONDOWN:
-        delete_bbox = activate_box(boxes, x, y, cfg.config["X_SIZE"], cfg.config["Y_SIZE"])
+        action = activate_box(boxes, x, y, cfg.config["X_SIZE"], cfg.config["Y_SIZE"])
         display_frame = copy.deepcopy(empty_frame)
         init_frame(display_frame, boxes)
         show_frame(display_frame, "window", mode="annotate")
-        if delete_bbox:
+        if action == "delete":
             modify_active_box(
                 boxes, task="delete")
         elif not waiting_key:
             waiting_key = True
             key = cv2.waitKey(0) & 0xFF
             waiting_key = False
-            selected_class_id = select_class_by_keyboard(key)
-            if selected_class_id:
-                modify_active_box(
-                    boxes, task="update_label",
-                    new_class_id=selected_class_id)
+            if key == asone.ESC_KEY:
+                pass
+            else:
+                selected_class_id = select_class_by_keyboard(key)
+                if selected_class_id:
+                    modify_active_box(
+                        boxes, task="update_label",
+                        new_class_id=selected_class_id)
 
         display_frame = copy.deepcopy(empty_frame)
         init_frame(display_frame, boxes)

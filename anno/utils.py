@@ -93,6 +93,21 @@ def in_box(norm_x, norm_y, xc, yc, w, h):
 
 
 def get_xy_to_box_position(box, x, y, error_margin=7):
+    """gets cursor's position wrt box object
+
+    Args:
+        box (box object): box object agains which
+            to compare relative position
+        x (int): The x-coordinate of the cursor
+        y (int): The y-coordinate of the cursor
+        error_margin (int): vertical and/or horizantal
+            error margin used to decide the relative position
+
+    Returns:
+        str or NoneType: one of [up, down, left, right,
+            upper_left, upper_right, down_left, down_right]
+            or None
+    """
     x1, y1, x2, y2 = box.coords
     if (x1 + error_margin) < x < (x2 - error_margin) and abs(y - y1) < error_margin:
         pos = "up"
