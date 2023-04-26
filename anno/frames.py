@@ -40,19 +40,33 @@ def init_frame(frame, boxes):
 def show_frame(
         frame, window, fps=None,
         current_frame_id=None, total_frames=None,
-        mode="view"):
+        mode="view", ses_label_count=None, init_label_count=None):
     if mode == "view":
-        cv2.line(frame, (20, 25), (250, 25), [85, 45, 255], 30)
-        cv2.putText(frame, f'fps:{int(fps)}', (11, 35), 0, 0.7, [
-            225, 255, 255], thickness=1, lineType=cv2.LINE_AA)
+        # frame count line
+        cv2.line(
+            frame, (10, 12), (140, 12),
+            [85, 45, 255], 10)
         cv2.putText(
-            frame, f'|frame:{int(current_frame_id)}/{int(total_frames)}',
-            (80, 35), 0, 0.7, [225, 255, 255],
+            frame,
+            f'fps:{int(fps)}|frame:{int(current_frame_id)}/{int(total_frames)}',
+            (11, 15), cv2.FONT_HERSHEY_SIMPLEX, 0.4, [225, 255, 255],
+            thickness=1, lineType=cv2.LINE_AA)
+        # saved files line
+        total = init_label_count + ses_label_count
+        cv2.line(
+            frame, (10, 24), (140, 24),
+            [85, 45, 255], 10)
+        cv2.putText(
+            frame,
+            f'total:{total}|ses:{ses_label_count}',
+            (11, 27), cv2.FONT_HERSHEY_SIMPLEX, 0.4, [225, 255, 255],
             thickness=1, lineType=cv2.LINE_AA)
     elif mode == "annotate":
-        cv2.line(frame, (20, 25), (180, 25), [85, 45, 255], 30)
+        cv2.line(
+            frame, (10, 12), (140, 12),
+            [85, 45, 255], 10)
         cv2.putText(
             frame, f'Annotation Mode',
-            (11, 35), 0, 0.7, [225, 255, 255],
+            (11, 15), cv2.FONT_HERSHEY_SIMPLEX, 0.4, [225, 255, 255],
             thickness=1, lineType=cv2.LINE_AA)
     cv2.imshow(window, frame)

@@ -23,7 +23,9 @@ def setup_tracker(real_time, video_path):
 
 
 def setup_detector():
-    detector = dt_obj = ASOne(
+
+    # hardcoded deepsort+yolov7
+    detector = ASOne(
         tracker=asone.DEEPSORT,
         detector=asone.YOLOV7_PYTORCH,
         use_cuda=True)

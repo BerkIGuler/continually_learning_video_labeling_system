@@ -3,13 +3,15 @@ import os
 import cv2
 import numpy as np
 from loguru import logger
+from datetime import datetime
 
 import cfg
 import asone
 
+import anno
 from anno import (select_class_by_keyboard, init_boxes, init_frame, show_frame,
                   BBox, to_ordered_xyxy, activate_box, modify_active_box,
-                  xyxy_to_yolo, setup_tracker, get_cursor_to_abox_status)
+                  setup_tracker, get_cursor_to_abox_status)
 
 from network.client import TCPClient
 
@@ -30,6 +32,13 @@ cursor_to_a_box_pos = None
 a_box = None
 
 
+cfg.init_config()
+# store global label number counters
+initial_label_count, session_label_count = anno.init_frame_counters(
+    cfg.config["ANNOTATED_FRAMES_DIR"],
+    cfg.config["ANNOTATED_LABELS_DIR"])
+
+
 def mouse_click(event, x, y, flags, param):
     global boxes, display_frame, ix, iy, \
         pressed, frame_cache, empty_frame, \
@@ -43,9 +52,14 @@ def mouse_click(event, x, y, flags, param):
         # there is not any active box yet
         if not cursor_to_a_box_pos:
             ix, iy = x, y
+        # if the active box is clicked in the middle
+        # enter move bbox mode
         elif cursor_to_a_box_pos == "mid":
             ix, iy = x, y
+            # remove the active box so that it
+            # is redrawn during mouse move event
             boxes.remove(a_box)
+        # scale active box in one of 8 directions
         else:
             boxes.remove(a_box)
         # copy frame
@@ -53,11 +67,14 @@ def mouse_click(event, x, y, flags, param):
         frame_cache = copy.deepcopy(boxed_frame)
 
     elif pressed and event == cv2.EVENT_MOUSEMOVE:
+        # draw new bbox
         if not cursor_to_a_box_pos:
             cv2.rectangle(frame_cache, (ix, iy), (x, y), (0, 0, 255), 1)
+        # move bbox
         elif cursor_to_a_box_pos == "mid":
             x1, y1, x2, y2 = a_box.get_scaled_coords(cursor_to_a_box_pos, x, y, ix, iy)
             cv2.rectangle(frame_cache, (x1, y1), (x2, y2), (0, 0, 255), 2)
+        # scale in one of 8 directions
         else:
             x1, y1, x2, y2 = a_box.get_scaled_coords(cursor_to_a_box_pos, x, y)
             cv2.rectangle(frame_cache, (x1, y1), (x2, y2), (0, 0, 255), 2)
@@ -70,6 +87,7 @@ def mouse_click(event, x, y, flags, param):
     elif event == cv2.EVENT_LBUTTONUP:
         pressed = False
 
+        # new box added
         if not cursor_to_a_box_pos:
             key = cv2.waitKey(0) & 0xFF
             selected_class_id = select_class_by_keyboard(key)
@@ -81,10 +99,12 @@ def mouse_click(event, x, y, flags, param):
                 frame_height=cfg.config["Y_SIZE"]
             )
             boxes.append(current_box)
+        # move box mode
         elif cursor_to_a_box_pos == "mid":
             new_coords = a_box.get_scaled_coords(cursor_to_a_box_pos, x, y, ix, iy)
             a_box.coords = list(new_coords)
             boxes.append(a_box)
+        # scale box mde
         else:
             new_coords = a_box.get_scaled_coords(cursor_to_a_box_pos, x, y)
             a_box.coords = list(new_coords)
@@ -95,21 +115,25 @@ def mouse_click(event, x, y, flags, param):
         show_frame(display_frame, "window", mode="annotate")
 
     elif event == cv2.EVENT_RBUTTONDOWN:
+        # modifies boxes' states as well
         action = activate_box(boxes, x, y, cfg.config["X_SIZE"], cfg.config["Y_SIZE"])
+
         display_frame = copy.deepcopy(empty_frame)
         init_frame(display_frame, boxes)
         show_frame(display_frame, "window", mode="annotate")
+        # delete active box if clicked on it twice
         if action == "delete":
             modify_active_box(
                 boxes, task="delete")
+        # update bbox class
         elif not waiting_key:
             waiting_key = True
             key = cv2.waitKey(0) & 0xFF
             waiting_key = False
-            if key == asone.ESC_KEY:
-                pass
-            else:
+            if key != asone.ESC_KEY:
                 selected_class_id = select_class_by_keyboard(key)
+
+                # could be None
                 if selected_class_id:
                     modify_active_box(
                         boxes, task="update_label",
@@ -120,35 +144,13 @@ def mouse_click(event, x, y, flags, param):
         show_frame(display_frame, "window", mode="annotate")
 
 
-def update_labels(frame_num, annotated: bool, vid_name=None, real_time=False):
-    global boxes
-    if annotated:
-        labels_dir = cfg.config["EDITED_LABELS_DIR"]
-    else:
-        labels_dir = cfg.config["LABELS_DIR"]
-    if real_time:
-        with open(f"{labels_dir}/real_time_vid_{frame_num}.txt", "w") as fp:
-            file_content = []
-            for i, box in enumerate(boxes):
-                file_content.append(xyxy_to_yolo(box))
-            fp.write("\n".join(file_content))
-    else:
-        with open(f"{labels_dir}/{vid_name}_{frame_num}.txt", "w") as fp:
-            file_content = []
-            for i, box in enumerate(boxes):
-                file_content.append(xyxy_to_yolo(box))
-            fp.write("\n".join(file_content))
-
-    # Make bboxes ready for next annotations
-    if annotated:  # To make annotated label.txt have all label data
-        boxes = []
-
-
 def annotate(video_path=None):
-    global boxes, display_frame, empty_frame
+    global boxes, display_frame, empty_frame, initial_label_count, session_label_count
 
     frames_path = cfg.config["FRAMES_DIR"]  # raw frames
-    anno_frames_dir = cfg.config["ANNOTATED_FRAMES_DIR"]
+    anno_frames_path = cfg.config["ANNOTATED_FRAMES_DIR"]  # annotated frames
+    labels_path = cfg.config["LABELS_DIR"]
+    anno_labels_path = cfg.config["ANNOTATED_LABELS_DIR"]
     x_size_window = cfg.config["X_SIZE"]
     y_size_window = cfg.config["Y_SIZE"]
     real_time = cfg.config["REAL_TIME"]
@@ -156,8 +158,9 @@ def annotate(video_path=None):
     if not real_time:
         video_name = os.path.basename(video_path).split(".")[0]
     else:
-        video_name = "real_time"
+        video_name = str(datetime.now()).replace(" ", "")
 
+    # window configuration
     cv2.namedWindow("window", cv2.WINDOW_GUI_NORMAL)
     cv2.resizeWindow("window", x_size_window, y_size_window)
 
@@ -173,17 +176,24 @@ def annotate(video_path=None):
             key = cv2.waitKey(0) & 0xFF  # stop the video
             while key != asone.ESC_KEY:  # press ESC to quit anno mode
                 key = cv2.waitKey(0) & 0xFF
-            # deactivate mouse event trigger
+            # deactivate mouse event trigger by setting callback
             cv2.setMouseCallback('window', lambda *args: None)
 
+            # if there are boxes after annotation save them
             if len(boxes) != 0:
-                if real_time and cfg.config["SAVE_EDITED_FRAMES"]:
-                    cv2.imwrite(f"{anno_frames_dir}/real_time_vid_{frame_id}.jpg", display_frame)
-                    update_labels(frame_num=frame_id, annotated=True, real_time=True)
-                elif cfg.config["SAVE_EDITED_FRAMES"]:
-                    cv2.imwrite(f"{anno_frames_dir}/{video_name}_{frame_id}.jpg", display_frame)
-                    update_labels(vid_name=video_name, frame_num=frame_id, annotated=True)
+                new_label_count = anno.interact.save_labels(
+                        boxes=boxes,
+                        anno_im_dir=anno_frames_path,
+                        anno_labels_dir=anno_labels_path,
+                        frame_id=frame_id,
+                        im=empty_frame,
+                        vid_name=video_name)
+
+                session_label_count += new_label_count
+                # empty boxes for next annotation
+                boxes = []
             continue
+
         elif action == "send":
             logger.info('Entered send mode')
             client = TCPClient(cfg.config['HOST'], cfg.config['PORT'])
@@ -194,11 +204,6 @@ def annotate(video_path=None):
             client = TCPClient(cfg.config['HOST'], cfg.config['PORT'])
             client.receive(cfg.config['FOLDER_SENT'])
 
-        if real_time and cfg.config["SAVE_RAW"]:
-            cv2.imwrite(f"{frames_path}/real_time_vid_{frame_id}.jpg", display_frame)
-        elif cfg.config["SAVE_RAW"]:
-            cv2.imwrite(f"{frames_path}/{video_name}_{frame_id}.jpg", display_frame)
-
         original_height, original_width = display_frame.shape[:2]
         boxes = init_boxes(
             bboxes, class_ids, track_ids,
@@ -206,11 +211,18 @@ def annotate(video_path=None):
         display_frame = cv2.resize(display_frame, (x_size_window, y_size_window))
         empty_frame = copy.deepcopy(display_frame)
         init_frame(display_frame, boxes)
+        show_frame(
+            display_frame, "window", fps, frame_id,
+            frame_count, "view",
+            session_label_count, initial_label_count)
 
-        show_frame(display_frame, "window", fps, frame_id, frame_count)
-        if real_time and cfg.config["SAVE_RAW"]:
-            cv2.imwrite(f"{frames_path}/real_time_vid_{frame_id}.jpg", display_frame)
-        elif cfg.config["SAVE_NON_EDITED_FRAMES"]:
-            update_labels(vid_name=video_name, frame_num=frame_id, annotated=False)
+        if cfg.config["SAVE_RAW"]:
+            anno.interact.save_labels(
+                boxes=boxes,
+                raw_im_dir=frames_path,
+                raw_labels_dir=labels_path,
+                frame_id=frame_id,
+                im=empty_frame,
+                vid_name=video_name)
 
     cv2.destroyAllWindows()

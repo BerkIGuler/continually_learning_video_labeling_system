@@ -53,19 +53,19 @@ def _send(file_name, client_socket):
 
 
 class TCPClient:
-
     def __init__(self, host, port):
-        self.host = host
-        self.port = port
+        self.host = host  # server host
+        self.port = port  # server port
+        # create TCP socket
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
     def send(self, folder_path):
         self.server_socket.connect((self.host, self.port))
         self.server_socket.sendall(b'q')
-        zipper = ZipDir(f'{folder_path}.zip', folder_path)
+        zip_file_name = f'{folder_path}.zip'
+        zipper = ZipDir(zip_file_name, folder_path)
         zipper.zipdir()
-        send_file_name = f'{folder_path}.zip'
-        _send(send_file_name, self.server_socket)
+        _send(zip_file_name, self.server_socket)
 
     def receive(self, folder_path):
         self.server_socket.connect((self.host, self.port))
@@ -76,41 +76,3 @@ class TCPClient:
     def close(self):
         # Close the server socket
         self.server_socket.close()
-
-
-def threaded_send(params):
-    host = params['HOST']
-    port = params['PORT']
-    folder_path = params['FOLDER_SENT']
-    server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server_socket.connect((host, port))
-    server_socket.sendall(b'q')
-    zipper = ZipDir(f'{folder_path}.zip', folder_path)
-    zipper.zipdir()
-    send_file_name = f'{folder_path}.zip'
-    _send(send_file_name, server_socket)
-
-
-
-'''
-    def start(self, folder_path):
-        self.server_socket.connect((self.host, self.port))
-        while True:
-            user_input = input('Press keys to send files to the server: ')
-            # Send the 'q' message to the server
-
-            if user_input == 'q':  # send
-                self.server_socket.sendall(b'q')
-                zipper = ZipDir(f'{folder_path}.zip', folder_path)
-                zipper.zipdir()
-                send_file_name = f'{folder_path}.zip'
-                send(send_file_name, self.server_socket)
-
-            elif user_input == 'm':  # receive
-                self.server_socket.sendall(b'm')
-                receive_file_name = 'receive_file.zip'
-                receive(receive_file_name, self.server_socket)
-
-            else:  # exiting the module
-                break
-'''
