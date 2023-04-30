@@ -60,7 +60,7 @@ def init_config():
     os.makedirs(config["VIDEO_DIR"], exist_ok=True)
     os.makedirs(config["ORIGINAL_DIR"], exist_ok=True)
     os.makedirs(config["ANNOTATED_FRAMES_DIR"], exist_ok=True)
-    os.makedirs(config["EDITED_LABELS_DIR"], exist_ok=True)
+    os.makedirs(config["ANNOTATED_LABELS_DIR"], exist_ok=True)
 
 
 # for testing only

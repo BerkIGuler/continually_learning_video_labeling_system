@@ -1,10 +1,11 @@
 import os
 import cfg
 import annotation
+import warnings
 
 
 def main():
-    cfg.init_config()
+    warnings.simplefilter("ignore")
     sample_video_path = os.path.join(cfg.config["VIDEO_DIR"], "test_vid_2.mp4")
 
     if cfg.config["REAL_TIME"]:
