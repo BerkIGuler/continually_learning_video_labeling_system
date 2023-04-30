@@ -11,7 +11,7 @@ import asone
 import anno
 from anno import (select_class_by_keyboard, init_boxes, init_frame, show_frame,
                   BBox, to_ordered_xyxy, activate_box, modify_active_box,
-                  setup_tracker, get_cursor_to_abox_status, interact)
+                  setup_tracker, get_cursor_to_abox_status)
 
 from network.client import TCPClient
 
@@ -20,11 +20,11 @@ display_frame = np.array([])
 ix, iy = 0, 0  # initial cursor point when mouse left-clicked
 boxes = []  # store all box object belonging to current frame
 
-pressed = False  # if left mouse click pressed
+pressed = False  # if left mouse clicked
 # flag to raise when the program waits for a keyboard event
 waiting_key = False
 frame_cache = None  # used to store a frame array
-empty_frame = np.array([])  # empty frame does not contain any boxes drawn
+empty_frame = np.array([])  # frame without any boxes drawn
 
 # to keep where the cursor lies wrt to active box
 cursor_to_a_box_pos = None
@@ -40,6 +40,8 @@ initial_label_count, session_label_count = anno.init_frame_counters(
 
 
 def mouse_click(event, x, y, flags, param):
+    """what to do on mouse click event"""
+
     global boxes, display_frame, ix, iy, \
         pressed, frame_cache, empty_frame, \
         waiting_key, cursor_to_a_box_pos, a_box
@@ -149,38 +151,41 @@ def annotate(video_path=None):
 
     frames_path = cfg.config["FRAMES_DIR"]  # raw frames
     anno_frames_path = cfg.config["ANNOTATED_FRAMES_DIR"]  # annotated frames
-    labels_path = cfg.config["LABELS_DIR"]
-    anno_labels_path = cfg.config["ANNOTATED_LABELS_DIR"]
+    labels_path = cfg.config["LABELS_DIR"]  # yolo+ds labels
+    anno_labels_path = cfg.config["ANNOTATED_LABELS_DIR"]  # annotated labels
     x_size_window = cfg.config["X_SIZE"]
     y_size_window = cfg.config["Y_SIZE"]
-    real_time = cfg.config["REAL_TIME"]
 
-    if not real_time:
+    if not cfg.config["REAL_TIME"]:
         video_name = os.path.basename(video_path).split(".")[0]
     else:
+        # generate unique rt vid save name
         video_name = str(datetime.now()).replace(" ", "")
 
     # window configuration
     cv2.namedWindow("window", cv2.WINDOW_GUI_NORMAL)
     cv2.resizeWindow("window", x_size_window, y_size_window)
 
-    track_fn = setup_tracker(real_time=real_time, video_path=video_path)
+    track_fn = setup_tracker(
+        real_time=cfg.config["REAL_TIME"], video_path=video_path)
 
     for bbox_details, frame_details, action in track_fn:
-        if action == "stream":
+
+        if action == "stream":  # keep reading next frame
             bboxes, track_ids, _, class_ids = bbox_details
             display_frame, frame_id, frame_count, fps = frame_details
-        elif action == "annotation":
+
+        elif action == "annotation":  # stop reading frames and annotate
             cv2.setMouseCallback('window', mouse_click)
             logger.info("Annotation Mode opened, video paused!")
             key = cv2.waitKey(0) & 0xFF  # stop the video
             while key != asone.ESC_KEY:  # press ESC to quit anno mode
                 key = cv2.waitKey(0) & 0xFF
-            # deactivate mouse event trigger by setting callback
+            # deactivate mouse event trigger by setting it dummy func.
             cv2.setMouseCallback('window', lambda *args: None)
 
-            # if there are boxes after annotation save them
-            if len(boxes) != 0:
+            # if there are boxes after annotation of curr. frame save
+            if cfg.config["SAVE_EDITED_FRAMES"] and len(boxes) != 0:
                 new_label_count = anno.interact.save_labels(
                         boxes=boxes,
                         anno_im_dir=anno_frames_path,
@@ -189,23 +194,33 @@ def annotate(video_path=None):
                         im=empty_frame,
                         vid_name=video_name)
 
+                # gets incremented by one
                 session_label_count += new_label_count
-                # empty boxes for next annotation
+                # empty boxes for next frame annotation
                 boxes = []
+
+            # if the track_fn yields a value different from stream
+            # a frame is not read hence continue for next frame
             continue
 
         elif action == "send":
-            logger.info('Entered send mode')
+            logger.info('Send mode')
+            show_frame(
+                empty_frame, "window", ses_label_count=session_label_count,
+                init_label_count=initial_label_count, mode="send")
             client = TCPClient(cfg.config['HOST'], cfg.config['PORT'])
-            client.send(cfg.config['FOLDER_SENT'])
-            # client.receive('./received')
+            client.send()
+            show_frame(empty_frame, "window", mode="after_send")
+            anno.interact.flush_sent_files()  # delete sent files
+            initial_label_count, session_label_count = 0, 0  # reset counters
+
         elif action == 'receive':
             logger.info('Entered receive mode')
+            show_frame(empty_frame, "window", mode="recv")
             client = TCPClient(cfg.config['HOST'], cfg.config['PORT'])
-            client.receive(cfg.config['FOLDER_SENT'])
-
+            client.receive()
+            show_frame(empty_frame, "window", mode="after_recv")
             anno.interact.update_weights()
-            break
 
         original_height, original_width = display_frame.shape[:2]
         boxes = init_boxes(

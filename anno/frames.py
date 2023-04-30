@@ -69,4 +69,55 @@ def show_frame(
             frame, f'Annotation Mode',
             (11, 15), cv2.FONT_HERSHEY_SIMPLEX, 0.4, [225, 255, 255],
             thickness=1, lineType=cv2.LINE_AA)
+    elif mode == "send":
+        sent_count = init_label_count + ses_label_count
+        cv2.line(
+            frame, (600, 700), (1250, 700),
+            [85, 45, 255], 50)
+        cv2.putText(
+            frame, f"Sending {sent_count} images to remote machine",
+            (600, 690), cv2.FONT_HERSHEY_SIMPLEX, 0.7, [225, 255, 255],
+            thickness=2, lineType=cv2.LINE_AA)
+        cv2.putText(
+            frame, f"Please Wait...",
+            (770, 715), cv2.FONT_HERSHEY_SIMPLEX, 0.7, [225, 255, 255],
+            thickness=2, lineType=cv2.LINE_AA)
+
+    elif mode == "after_send":
+        cv2.line(
+            frame, (600, 700), (1250, 700),
+            [85, 45, 255], 50)
+        cv2.putText(
+            frame, f"Files sent to remote machine",
+            (675, 690), cv2.FONT_HERSHEY_SIMPLEX, 0.7, [225, 255, 255],
+            thickness=2, lineType=cv2.LINE_AA)
+        cv2.putText(
+            frame, f"Resuming Operation...",
+            (720, 715), cv2.FONT_HERSHEY_SIMPLEX, 0.7, [225, 255, 255],
+            thickness=2, lineType=cv2.LINE_AA)
+
+    elif mode == "recv":
+        cv2.line(
+            frame, (600, 700), (1250, 700),
+            [85, 45, 255], 50)
+        cv2.putText(
+            frame, f"Receiving the model file from remote",
+            (600, 690), cv2.FONT_HERSHEY_SIMPLEX, 0.7, [225, 255, 255],
+            thickness=2, lineType=cv2.LINE_AA)
+        cv2.putText(
+            frame, f"Please Wait...",
+            (770, 715), cv2.FONT_HERSHEY_SIMPLEX, 0.7, [225, 255, 255],
+            thickness=2, lineType=cv2.LINE_AA)
+    elif mode == "after_recv":
+        cv2.line(
+            frame, (600, 700), (1250, 700),
+            [85, 45, 255], 50)
+        cv2.putText(
+            frame, f"Resuming operation...",
+            (740, 690), cv2.FONT_HERSHEY_SIMPLEX, 0.7, [225, 255, 255],
+            thickness=2, lineType=cv2.LINE_AA)
+        cv2.putText(
+            frame, f"Please restart to use updated weights...",
+            (600, 715), cv2.FONT_HERSHEY_SIMPLEX, 0.7, [225, 255, 255],
+            thickness=2, lineType=cv2.LINE_AA)
     cv2.imshow(window, frame)

@@ -2,10 +2,12 @@ FRAMES_DIR: ./data/frames  # where to save all frames
 ANNOTATED_FRAMES_DIR: ./send_data/anno_frames  # where to save annotated frames by the user
 LABELS_DIR: ./data/labels  # where to save all labels
 ANNOTATED_LABELS_DIR: ./send_data/anno_labels  # where to save labels for annotated frames by the user
-VIDEO_DIR: ./videos
-ORIGINAL_DIR: ./data/yolo_dsort  # where to save yolo+deepsort applid video file, SAVE_ORIGINAL must be true
+VIDEO_DIR: ./videos  # test vids dir
 
-FILTERED_CLASSES: None  # if None detect all classes, else detected classes belonging to given ids
+# where to save yolo+deepsort applid video file, for this to be valid SAVE_ORIGINAL must be true
+ORIGINAL_DIR: ./data/yolo_dsort
+
+FILTERED_CLASSES: None  # if None detect all classes, else detected classes belong to given ids
 
 SAVE_RAW: False  # if True save raw frames in a seperate dir
 SAVE_EDITED_FRAMES: True  # if True, save annotated frames and labels to disk
@@ -13,18 +15,20 @@ SAVE_EDITED_FRAMES: True  # if True, save annotated frames and labels to disk
 SAVE_ORIGINAL: False  # if True saves tracker+detection outputs as a seperate video
 DISPLAY_ORIGINAL: False  # if True display yolo+deepsort annotated video in a seperate video
 
+# if True read from webcam 0 else operate on test vids
 REAL_TIME: False
 
-ID_TO_CLASS_CFG: class_list.yaml
-ID_TO_COLOR_CFG: color_list.yaml
-KEY_TO_CLASS_CFG: key_to_class_w32.yaml
+ID_TO_CLASS_CFG: id_to_class.yaml  # stores int_id:class_name pairs
+ID_TO_COLOR_CFG: id_to_color.yaml  # stores int_id:rgb 3-tuple pairs
+KEY_TO_CLASS_CFG: key_to_class.yaml  # stores keyboard_button:class_name pairs
 
-X_SIZE: 1080
-Y_SIZE: 720
+X_SIZE: 1080  # display window width
+Y_SIZE: 720  # display window length
 
-# network
-HOST: '192.168.0.0'
-PORT: 65432
-FOLDER_SENT: ./send_data
+# network settings
+HOST: '192.168.0.0'  # training machine's IP address
+PORT: 65432  # port number of the host used by online_training module
+FOLDER_SENT: ./send_data  # which folder to zip and send to training machine
 
-
+# received model file
+RECEIVE_SAVE_NAME: temp_received_model  # temporarily saves received model as temp_received_model.zip

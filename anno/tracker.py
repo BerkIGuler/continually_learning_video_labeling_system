@@ -5,7 +5,7 @@ from loguru import logger
 
 
 def setup_tracker(real_time, video_path):
-
+    """return a tracker to be iterated to read frames"""
     dt_obj = setup_detector()
     if real_time:
         track_fn = dt_obj.track_webcam(
@@ -23,8 +23,7 @@ def setup_tracker(real_time, video_path):
 
 
 def setup_detector():
-
-    # hardcoded deepsort+yolov7
+    """return deepsort+yolov7 detector"""
     detector = ASOne(
         tracker=asone.DEEPSORT,
         detector=asone.YOLOV7_PYTORCH,
