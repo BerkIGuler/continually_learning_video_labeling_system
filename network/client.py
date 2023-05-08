@@ -32,7 +32,7 @@ class TCPClient:
         self.server_socket.connect((self.host, self.port))
         # send protocol message
         # q means labels and frames will be sent very soon
-        self.server_socket.sendall(b'q')
+        self.server_socket.sendall(b'r')
 
         # zip the frames and labels dir
         folder_to_sent = cfg.config["FOLDER_SENT"]
@@ -52,7 +52,7 @@ class TCPClient:
         self.server_socket.connect((self.host, self.port))
         # send protocol message
         # b means model will be received very soon
-        self.server_socket.sendall(b'm')
+        self.server_socket.sendall(b's')
 
         # model is temporarily saved as model.zip
         model_zip_file_name = cfg.config["RECEIVE_SAVE_NAME"]

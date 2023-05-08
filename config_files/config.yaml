@@ -1,7 +1,7 @@
-FRAMES_DIR: ./data/frames  # where to save all frames
-ANNOTATED_FRAMES_DIR: ./send_data/anno_frames  # where to save annotated frames by the user
+FRAMES_DIR: ./data/images  # where to save all frames
+ANNOTATED_FRAMES_DIR: ./send_data/images  # where to save annotated frames by the user
 LABELS_DIR: ./data/labels  # where to save all labels
-ANNOTATED_LABELS_DIR: ./send_data/anno_labels  # where to save labels for annotated frames by the user
+ANNOTATED_LABELS_DIR: ./send_data/labels  # where to save labels for annotated frames by the user
 VIDEO_DIR: ./videos  # test vids dir
 
 # where to save yolo+deepsort applid video file, for this to be valid SAVE_ORIGINAL must be true
@@ -22,13 +22,14 @@ ID_TO_CLASS_CFG: id_to_class.yaml  # stores int_id:class_name pairs
 ID_TO_COLOR_CFG: id_to_color.yaml  # stores int_id:rgb 3-tuple pairs
 KEY_TO_CLASS_CFG: key_to_class.yaml  # stores keyboard_button:class_name pairs
 
-X_SIZE: 1080  # display window width
-Y_SIZE: 720  # display window length
+X_SIZE: 1440  # display window width
+Y_SIZE: 960  # display window length
 
 # network settings
-HOST: '192.168.0.0'  # training machine's IP address
-PORT: 65432  # port number of the host used by online_training module
-FOLDER_SENT: ./send_data  # which folder to zip and send to training machine
+HOST: '127.0.0.1'  # training machine's IP address
+PORT: 65432  # port number where training machine is listening
 
-# received model file
+
+# remote folders
+FOLDER_SENT: send_data  # which folder name to zip and send to training machine
 RECEIVE_SAVE_NAME: temp_received_model  # temporarily saves received model as temp_received_model.zip
