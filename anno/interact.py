@@ -86,7 +86,6 @@ def flush_sent_files():
     os.makedirs(cfg.config["ANNOTATED_LABELS_DIR"], exist_ok=True)
 
 
-
 class Unzipper:
     """Decompresses a zip file"""
     def __init__(self, zip_file, output_folder):
