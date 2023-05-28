@@ -30,6 +30,8 @@ def xyxy_to_yolo(box, return_type="str"):
         yolo_formatted = f"{box.class_id} {xc:.5} {yc:.5} {w:.5} {h:.5}"
         if w != 0.0 and h != 0.0:
             return yolo_formatted
+        else:
+            return None
     elif return_type == "tuple":
         yolo_formatted = box.class_id, xc, yc, w, h
     else:
