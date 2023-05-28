@@ -22,8 +22,8 @@ ID_TO_CLASS_CFG: id_to_class.yaml  # stores int_id:class_name pairs
 ID_TO_COLOR_CFG: id_to_color.yaml  # stores int_id:rgb 3-tuple pairs
 KEY_TO_CLASS_CFG: key_to_class.yaml  # stores keyboard_button:class_name pairs
 
-X_SIZE: 1440  # display window width
-Y_SIZE: 960  # display window length
+X_SIZE: 1920  # display window width
+Y_SIZE: 1080  # display window length
 
 # network settings
 HOST: '127.0.0.1'  # training machine's IP address

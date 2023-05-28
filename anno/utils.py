@@ -28,11 +28,14 @@ def xyxy_to_yolo(box, return_type="str"):
     yc = (y1 + y2) / (2 * box.frame_height)
     if return_type == "str":
         yolo_formatted = f"{box.class_id} {xc:.5} {yc:.5} {w:.5} {h:.5}"
+        if w != 0.0 and h != 0.0:
+            return yolo_formatted
     elif return_type == "tuple":
         yolo_formatted = box.class_id, xc, yc, w, h
     else:
         raise ValueError("return_type must be either 'str' or 'tuple'")
     return yolo_formatted
+
 
 
 def to_ordered_xyxy(ix, iy, x, y):

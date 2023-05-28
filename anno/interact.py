@@ -71,7 +71,9 @@ def save_txt(file_name, save_bboxes):
     with open(file_name, "w") as fp:
         file_content = []
         for i, box in enumerate(save_bboxes):
-            file_content.append(anno.xyxy_to_yolo(box))
+            bbox_yolo_format = anno.xyxy_to_yolo(box)
+            if bbox_yolo_format is not None:
+                file_content.append(bbox_yolo_format)
         fp.write("\n".join(file_content))
 
 
