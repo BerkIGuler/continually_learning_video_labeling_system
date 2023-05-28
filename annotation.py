@@ -208,18 +208,22 @@ def annotate(video_path=None):
             show_frame(
                 empty_frame, "window", ses_label_count=session_label_count,
                 init_label_count=initial_label_count, mode="send")
+            cv2.waitKey(1)
             client = TCPClient(cfg.config['HOST'], cfg.config['PORT'])
             client.send()
             show_frame(empty_frame, "window", mode="after_send")
+            cv2.waitKey(3000)
             anno.interact.flush_sent_files()  # delete sent files
             initial_label_count, session_label_count = 0, 0  # reset counters
 
         elif action == 'receive':
             logger.info('Entered receive mode')
             show_frame(empty_frame, "window", mode="recv")
+            cv2.waitKey(1)
             client = TCPClient(cfg.config['HOST'], cfg.config['PORT'])
             client.receive()
             show_frame(empty_frame, "window", mode="after_recv")
+            cv2.waitKey(4000)
             anno.interact.update_weights()
 
         original_height, original_width = display_frame.shape[:2]

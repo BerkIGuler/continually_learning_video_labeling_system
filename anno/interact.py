@@ -78,9 +78,9 @@ def save_txt(file_name, save_bboxes):
 def flush_sent_files():
     """deletes sent files from the disk"""
     cwd = os.getcwd()
-    send_data_dir_name = os.path.basename(cfg.config["FOLDER_SENT"])
-    rm_dir = os.path.join(cwd, send_data_dir_name)
+    rm_dir = os.path.join(cwd, cfg.config["FOLDER_SENT"])
     shutil.rmtree(rm_dir, ignore_errors=True)  # rm
+    os.remove(rm_dir + ".zip")  # remove temp zip file
     # create an empty frames & labels dir
     os.makedirs(cfg.config["ANNOTATED_FRAMES_DIR"], exist_ok=True)
     os.makedirs(cfg.config["ANNOTATED_LABELS_DIR"], exist_ok=True)
@@ -99,7 +99,6 @@ class Unzipper:
         with zipfile.ZipFile(self.zip_file, 'r') as zip_ref:
             try:
                 zip_ref.extractall(self.output_folder)
-                logger.info(f"Model file is extracted to: {self.output_folder}")
             except Exception as e:
                 logger.error(f"Error occurred {e}")
 
@@ -119,12 +118,15 @@ def update_weights(temp_folder_name="temp_dir"):
 
     # assumes there is only one folder inside
     assert len(os.listdir(temp_folder_path)) == 1, \
-        "zip file must contain one folder which contains the .pt file"
+        "zip file must contain one folder which contains a folder with the .pt file"
     inside_temp_folder_path = os.path.join(temp_folder_path, os.listdir(temp_folder_path)[0])
     # assuming there is only one file inside
     assert len(os.listdir(inside_temp_folder_path)) == 1, \
-        "zip file must contain one folder which contains the .pt file"
-    model_path = os.path.join(inside_temp_folder_path, os.listdir(inside_temp_folder_path)[0])
+        "zip file must contain one folder which contains a folder with the .pt file"
+    model_dir = os.path.join(inside_temp_folder_path, os.listdir(inside_temp_folder_path)[0])
+    assert len(os.listdir(model_dir)) == 1, \
+        "zip file must contain one folder which contains a folder with the .pt file"
+    model_path = os.path.join(model_dir, os.listdir(model_dir)[0])
 
     # if the new model name is different from the expected, rename
     if os.path.basename(model_path) != "best.pt":

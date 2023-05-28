@@ -5,6 +5,7 @@
 *.pth
 *.t7
 *.zip
+*.MOV
 # pycharm project folder
 .idea/
 
