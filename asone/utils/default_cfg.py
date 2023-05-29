@@ -8,8 +8,8 @@ config = {
     "filter_classes": None,
     "class_names": None,
     "input_shape" : (640, 640),
-    "conf_thres": 0.05,
-    "iou_thres" : 0.45,
+    "conf_thres": 0.01,
+    "iou_thres" : 0.25,
     "max_det" : 100,
     "agnostic_nms" : False,
     "with_p6" : False
