@@ -31,6 +31,7 @@ cursor_to_a_box_pos = None
 # to store active box
 a_box = None
 
+counter = 0
 
 cfg.init_config()
 # store global label number counters
@@ -91,16 +92,17 @@ def mouse_click(event, x, y, flags, param):
 
         # new box added
         if not cursor_to_a_box_pos:
-            key = cv2.waitKey(0) & 0xFF
-            selected_class_id = select_class_by_keyboard(key)
-            current_box = BBox(
-                coords=to_ordered_xyxy(ix, iy, x, y),
-                color=cfg.id_to_color[selected_class_id],
-                class_id=selected_class_id,
-                frame_width=cfg.config["X_SIZE"],
-                frame_height=cfg.config["Y_SIZE"]
-            )
-            boxes.append(current_box)
+            key = cv2.waitKey(1000) & 0xFF  # wait for new class if not continue not to block
+            if key != 255 and key != asone.ESC_KEY:
+                selected_class_id = select_class_by_keyboard(key)
+                current_box = BBox(
+                    coords=to_ordered_xyxy(ix, iy, x, y),
+                    color=cfg.id_to_color[selected_class_id],
+                    class_id=selected_class_id,
+                    frame_width=cfg.config["X_SIZE"],
+                    frame_height=cfg.config["Y_SIZE"]
+                )
+                boxes.append(current_box)
         # move box mode
         elif cursor_to_a_box_pos == "mid":
             new_coords = a_box.get_scaled_coords(cursor_to_a_box_pos, x, y, ix, iy)

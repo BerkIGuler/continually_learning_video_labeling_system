@@ -48,7 +48,6 @@ class YOLOv7Detector:
             model.half() if self.fp16 else model.float()
         return model
 
-
     def detect(self, image: list,
                input_shape: tuple = (640, 640),
                conf_thres: float = 0.01,

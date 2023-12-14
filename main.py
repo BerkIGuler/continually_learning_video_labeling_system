@@ -6,7 +6,7 @@ import warnings
 
 def main():
     warnings.simplefilter("ignore")
-    sample_video_path = os.path.join(cfg.config["VIDEO_DIR"], "test_vid_2.mp4")
+    sample_video_path = os.path.join(cfg.config["VIDEO_DIR"], "bilkent_test_1.MOV")
 
     if cfg.config["REAL_TIME"]:
         annotation.annotate()
